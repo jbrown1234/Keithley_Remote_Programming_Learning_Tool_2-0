@@ -3,7 +3,7 @@ from tkinter import ttk
 import pyvisa as visa
 rm = visa.ResourceManager()
 resources_tuple = rm.list_resources()
-
+# change
 # Place function utilities here
 
 

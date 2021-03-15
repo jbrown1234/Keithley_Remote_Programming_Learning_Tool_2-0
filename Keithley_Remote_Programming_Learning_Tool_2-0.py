@@ -3,8 +3,9 @@ from tkinter import ttk
 import pyvisa as visa
 rm = visa.ResourceManager()
 resources_tuple = rm.list_resources()
-# change
-# Place function utilities here
+
+
+# Place widget function utilities here
 
 
 def cbo_changed(*args):
@@ -94,21 +95,29 @@ def button_connect_disconnect_press(*args):
 
 
 def button_instruments_refresh(*args):
-    resources_tuple = rm.list_resources()
-    cbo_instruments['values'] = resources_tuple
+    alt_resources_tuple = rm.list_resources()
+    cbo_instruments['values'] = alt_resources_tuple
+    return
+
+
+def chk_a_action(*args):
+    if chk_a_val.get() == 1:
+        dud = 1
+        #lbl_a_text.set("This is message A")
+    else:
+        dud = 2
     return
 
 
 # Place our main UI definition here
 root = Tk()
 root.title("Keithley Remote Programming Learning Tool 2.0")
-#root['width'] = 600
-#root['height'] = 300
 root.columnconfigure(0, weight=1)   # helps with frame/app resizing on the fly
 root.rowconfigure(0, weight=1)      # helps with frame/app resizing on the fly
-root.geometry("778x400")    # We define a geometry instead of independent height and width because the tkinter
-                            # base behavior of widgets appears to override the intended behavior, meaning our
-                            # sizes appear to get ignored after the widgets are gridded up.
+# We define a geometry instead of independent height and width because the tkinter
+# base behavior of widgets appears to override the intended behavior, meaning our
+# sizes appear to get ignored after the widgets are gridded up.
+root.geometry("778x400")
 
 
 is_connected = BooleanVar()
@@ -124,32 +133,62 @@ var1.set(1)
 my_text_var1 = StringVar()
 my_text_var1.set("Default")
 
+chk_a_val = IntVar()
+chk_a_val.set(1)
+
+cbo_baud_rate_variable = StringVar()
+cbo_parity_variable = StringVar()
+cbo_stop_bits_variable = StringVar()
+cbo_flow_ctrl_variable = StringVar()
+cbo_term_char_variable = StringVar()
+
 # Created a main frame (within the root GUI) on which to place controls. This allows for adding padding
 # to be added as needed around the perimeter of the UI and provide a more appealing appearance.
 main_frame = ttk.Frame(root, padding="5 5 5 5", height=300, width=600)
-#main_frame.pack()  # had this in the original code, but does not appear it is needed.
 main_frame.grid(column=0, row=0, sticky=(N, W, E, S))    # anchors to the root at the default position
 main_frame.columnconfigure(0, weight=1)
-#main_frame.columnconfigure(1, weight=2)
 
 
 # Create a group box (aka Labelframe) to hold the instrument detect, select, connect/disconnect controls
 grp_instruments = ttk.Labelframe(main_frame, text='Instrument Select', pad=(5, 5, 5, 5), height=300, width=150)
-cbo_instruments = ttk.Combobox(grp_instruments, textvariable=cbo_instr_variable, width=48) # .grid(column=1, row=1) # PROBLEM.... see note below
 
+cbo_instruments = ttk.Combobox(grp_instruments, textvariable=cbo_instr_variable, width=48)
 cbo_instruments.bind('<<ComboboxSelected>>', cbo_changed)
-cbo_instruments['values'] = resources_tuple   # the book showed how
-                                                                                                # values were added with
-                                                                                                # a tuple, but we can
-                                                                                                # also use a list
-#cbo_instruments.grid(column=1, row=1)   # NOTE - if I put the grid assignment in the same line with the combo box definition
-                                        # I get an error in assigning values to the combo box in a follow-up statement;
-                                        # seems to throw the scope for a loop.
-cbo_instruments.current()
+cbo_instruments['values'] = resources_tuple
+cbo_instruments.current(0)
 
-btn_connect = ttk.Button(grp_instruments, text="Connect", command=button_connect_disconnect_press)
+btn_connect = ttk.Button(grp_instruments, text="Connect", command=button_connect_disconnect_press, width=23)
 btn_refresh = ttk.Button(grp_instruments, text="Refresh", command=button_instruments_refresh)
 
+grp_sockets_utils = ttk.Labelframe(grp_instruments, text="Sockets")
+# lbl_enable_term = ttk.Label(grp_sockets_utils, text="Enable Term")
+chk_enable_term = ttk.Checkbutton(grp_sockets_utils, text="Enable Term Char", command=chk_a_action, variable=chk_a_val)
+
+grp_serial_utils = ttk.Labelframe(grp_instruments, text="RS-232")
+lbl_baud = ttk.Label(grp_serial_utils, text="Baud", width=10)
+cbo_baud = ttk.Combobox(grp_serial_utils, textvariable=cbo_baud_rate_variable, width=10)
+cbo_baud['values'] = ['9600', '115200']
+cbo_baud.current(0)
+
+lbl_parity = ttk.Label(grp_serial_utils, text="Parity", width=10)
+cbo_parity = ttk.Combobox(grp_serial_utils, textvariable=cbo_parity_variable, width=10)
+cbo_parity['values'] = ['Odd', 'Even']
+cbo_parity.current(0)
+
+lbl_stop_bits = ttk.Label(grp_serial_utils, text="Stop Bits", width=10)
+cbo_stop_bits = ttk.Combobox(grp_serial_utils, textvariable=cbo_stop_bits_variable, width=10)
+cbo_stop_bits['values'] = ['0', '1', '2']
+cbo_stop_bits.current(1)
+
+lbl_flow_ctrl = ttk.Label(grp_serial_utils, text="Flow Ctrl", width=10)
+cbo_flow_ctrl = ttk.Combobox(grp_serial_utils, textvariable=cbo_flow_ctrl_variable, width=10)
+cbo_flow_ctrl['values'] = ['None', 'XON/XOFF', 'RTS/CTS']
+cbo_flow_ctrl.current(0)
+
+lbl_term_char = ttk.Label(grp_serial_utils, text="Term Char", width=10)
+cbo_term_char = ttk.Combobox(grp_serial_utils, textvariable=cbo_term_char_variable, width=10)
+cbo_term_char['values'] = ['\\n', '\\r']
+cbo_term_char.current(0)
 
 # Create a group box (aka Labelframe) to hold the single command operation tools....
 grp_single_command_ops = ttk.Labelframe(main_frame,
@@ -214,6 +253,23 @@ cbo_instruments.grid(column=0, row=0, columnspan=2, sticky=(W, E))
 btn_connect.grid(column=0, row=1, sticky=(W, E))
 btn_refresh.grid(column=1, row=1, sticky=(W, E))
 
+grp_sockets_utils.grid(column=0, row=2, sticky=(N, S, W, E))
+# lbl_enable_term.grid(column=0, row=0)
+chk_enable_term.grid(column=0, row=0)
+
+grp_serial_utils.grid(column=1, row=2, sticky=(N, S, W, E))
+lbl_baud.grid(column=0, row=0, sticky=W)
+lbl_parity.grid(column=0, row=1, sticky=W)
+lbl_stop_bits.grid(column=0, row=2, sticky=W)
+lbl_flow_ctrl.grid(column=0, row=3, sticky=W)
+lbl_term_char.grid(column=0, row=4, sticky=W)
+cbo_baud.grid(column=1, row=0, sticky=E)
+cbo_parity.grid(column=1, row=1, sticky=E)
+cbo_stop_bits.grid(column=1, row=2, sticky=E)
+cbo_flow_ctrl.grid(column=1, row=3, sticky=E)
+cbo_term_char.grid(column=1, row=4, sticky=E)
+
+
 # next group controls on the main GUI....
 grp_single_command_ops.grid(column=0, row=1, sticky=(N, S, W, E))
 cbo_single_commands.grid(column=0, row=0, columnspan=3)
@@ -221,11 +277,10 @@ btn_cmd_write.grid(column=0, row=1, sticky=(W, E))
 btn_cmd_query.grid(column=1, row=1, sticky=(W, E))
 btn_clear_command_list.grid(column=2, row=1, sticky=(W, E))
 
-
 # next group controls on the main GUI....
 grp_multi_command_ops.grid(column=1, row=0, rowspan=2, sticky=(N, S, W, E))
 txt_multi_command_text.grid(column=0, row=0, sticky=(N, S, W, E), rowspan=4)
-s.grid(column=1, row=0, sticky=(N,S), rowspan=4)
+s.grid(column=1, row=0, sticky=(N, S), rowspan=4)
 btn_send_commands.grid(column=2, row=0, sticky=(N))
 btn_clear_commands.grid(column=2, row=1, sticky=(N))
 btn_save_commands.grid(column=2, row=2, sticky=(N))

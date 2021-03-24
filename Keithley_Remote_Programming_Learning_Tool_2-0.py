@@ -1,21 +1,220 @@
 from tkinter import *
 from tkinter import ttk
 import pyvisa as visa
+
 rm = visa.ResourceManager()
 resources_tuple = rm.list_resources()
+my_instr = None
+
+# ==========================================================================================
+# Place VISA function utilities here
+# ==========================================================================================
+echo_commands = 0
+
+"""*********************************************************************************
+    Function: instrument_connect(resource_mgr, instrument_resource_string, timeout,
+                                 do_id_query, do_reset, do_clear) 
+    Purpose: Open an instance of an instrument object for remote communication.
+    Parameters:
+        resource_mgr (object) - Instance of a resource manager object.
+        instrument_object (object) - Instance of an instrument object to be initialized
+                                     within this function. 
+
+        instrument_resource_string (string) - The VISA resource string associated with
+                                              a specific instrument defining its connection
+                                              characteristics (communications type, model,
+                                              serial number, etc.)
+        timeout (int) - Time in milliseconds to wait before the communication transaction
+                        with the target instrument is considered failed (timed out)
+        do_id_query (int) - A flag that determines whether or not to query and print the 
+                            instrument ID string. 
+        do_reset (int) - A flag that determines whether or not to issue a reset command to
+                         the instrument during this connection. 
+        do_clear (int) - A flag that determines whether or not to issue a clear command to 
+                         the instrument during this connection. 
+
+    Returns:
+        None
+
+    Revisions:
+        2019-08-07    JJB    Initial revision.
+*********************************************************************************"""
 
 
+def instrument_connect(resource_mgr, instrument_object, instrument_resource_string, timeout, do_id_query, do_reset,
+                       do_clear):
+    instrument_object = resource_mgr.open_resource(instrument_resource_string)
+    if do_id_query == 1:
+        print(instrument_query(instrument_object, "*IDN?"))
+    if do_reset == 1:
+        instrument_write(instrument_object, "*RST")
+    if do_clear == 1:
+        instrument_object.clear()
+    instrument_object.timeout = timeout
+    return resource_mgr, instrument_object
+
+
+def instrument_connect_alt(timeout, do_id_query, do_reset, do_clear):
+    my_instr = rm.open_resource(instr_resource_string.get())
+    if do_id_query == 1:
+        print(instrument_query(my_instr, "*IDN?"))
+    if do_reset == 1:
+        instrument_write(my_instr, "*RST")
+    if do_clear == 1:
+        my_instr.clear()
+    my_instr.timeout = timeout
+    return
+
+
+"""*********************************************************************************
+    Function: instrument_write(instrument_object, my_command)
+    Purpose: Issue controlling commands to the target instrument.
+    Parameters:
+        instrument_object (object) - Instance of an instrument object.
+
+        my_command (string) - The command issued to the instrument to make it 
+                              perform some action or service. 
+    Returns:
+        None
+    Revisions:
+        2019-08-21    JJB    Initial revision.
+*********************************************************************************"""
+
+
+def instrument_write(instrument_object, my_command):
+    if echo_commands == 1:
+        print(my_command)
+    instrument_object.write(my_command)
+    return
+
+
+"""*********************************************************************************
+    Function: instrument_read(instrument_object)
+    Purpose: Used to read commands from the instrument.
+    Parameters:
+        instrument_object (object) - Instance of an instrument object.
+
+    Returns:
+        <<<reply>>> (string) - The requested information returned from the 
+                    target instrument. Obtained by way of a caller
+                    to instrument_read().
+    Revisions:
+        2019-08-21    JJB    Initial revision.
+*********************************************************************************"""
+
+
+def instrument_read(instrument_object):
+    return instrument_object.read()
+
+
+"""*********************************************************************************
+    Function: instrument_query(instrument_object, my_command)
+    Purpose: Used to send commands to the instrument  and obtain an information string from the instrument.
+             Note that the information received will depend on the command sent and will be in string
+             format.
+    Parameters:
+        instrument_object (object) - Instance of an instrument object.
+
+        my_command (string) - The command issued to the instrument to make it 
+                      perform some action or service. 
+    Returns:
+        <<<reply>>> (string) - The requested information returned from the 
+                    target instrument. Obtained by way of a caller
+                    to instrument_read().
+    Revisions:
+        2019-08-21    JJB    Initial revision.
+*********************************************************************************"""
+
+
+def instrument_query(instrument_object, my_command):
+    if echo_commands == 1:
+        print(my_command)
+    return instrument_object.query(my_command)
+
+
+"""*********************************************************************************
+    Function: instrument_disconnect(instrument_object)
+    Purpose: Break the VISA connection between the controlling computer
+             and the target instrument.
+    Parameters:
+        instrument_object (object) - Instance of an instrument object.
+    Returns:
+        None
+    Revisions:
+        2019-08-21    JJB    Initial revision.
+*********************************************************************************"""
+
+
+def instrument_disconnect(instrument_object):
+    instrument_object.close()
+    return
+
+
+# ==========================================================================================
 # Place widget function utilities here
+# ==========================================================================================
 
+def cbo_changed_instruments(*args):
+    instr_resource_string.set(cbo_instr_variable.get())
 
-def cbo_changed(*args):
-    instrument_resource_string.set(cbo_instr_variable.get())
+    if "ASRL" in instr_resource_string.get():
+        for child2 in grp_serial_utils.winfo_children():
+            if isinstance(child2, ttk.Button):
+                child2.config(state='enabled')
+            elif isinstance(child2, ttk.Radiobutton):
+                child2.config(state='enabled')
+            elif isinstance(child2, ttk.Entry):
+                child2.config(state='enabled')
+            elif isinstance(child2, Text):
+                child2.config(state='normal')
+            elif isinstance(child2, ttk.Combobox):
+                child2.config(state='enabled')
+    else:
+        for child2 in grp_serial_utils.winfo_children():
+            if isinstance(child2, ttk.Button):
+                child2.config(state='disabled')
+            elif isinstance(child2, ttk.Radiobutton):
+                child2.config(state='disabled')
+            elif isinstance(child2, ttk.Entry):
+                child2.config(state='disabled')
+            elif isinstance(child2, Text):
+                child2.config(state='disabled')
+            elif isinstance(child2, ttk.Combobox):
+                child2.config(state='disabled')
 
+    if "SOCKET" in instr_resource_string.get():
+        for child in grp_sockets_utils.winfo_children():
+            if isinstance(child, ttk.Button):
+                child.config(state='enabled')
+            elif isinstance(child, ttk.Radiobutton):
+                child.config(state='enabled')
+            elif isinstance(child, ttk.Entry):
+                child.config(state='enabled')
+            elif isinstance(child, Text):
+                child.config(state='normal')
+            elif isinstance(child, ttk.Combobox):
+                child.config(state='enabled')
+            elif isinstance(child, ttk.Checkbutton):
+                child.config(state='enabled')
+    else:
+        for child in grp_sockets_utils.winfo_children():
+            if isinstance(child, ttk.Button):
+                child.config(state='disabled')
+            elif isinstance(child, ttk.Radiobutton):
+                child.config(state='disabled')
+            elif isinstance(child, ttk.Entry):
+                child.config(state='disabled')
+            elif isinstance(child, Text):
+                child.config(state='disabled')
+            elif isinstance(child, ttk.Combobox):
+                child.config(state='disabled')
+            elif isinstance(child, ttk.Checkbutton):
+                child.config(state='disabled')
     return
 
 
 def cbo_single_command_changed(*args):
-    instrument_resource_string.set(cbo_single_cmd_variable.get())
+    instr_resource_string.set(cbo_single_cmd_variable.get())
 
     return
 
@@ -44,30 +243,40 @@ def frame_a_rdo_click(*args):
 
 def button_connect_disconnect_press(*args):
     if not is_connected.get():
-        btn_connect.config(text="Disconnect")
-        is_connected.set(True)
-        for child in grp_single_command_ops.winfo_children():
-            child.config(state='enabled')
-        for child2 in grp_multi_command_ops.winfo_children():
-            if isinstance(child2, ttk.Button):
-                child2.config(state='enabled')
-            elif isinstance(child2, ttk.Radiobutton):
-                child2.config(state='enabled')
-            elif isinstance(child2, ttk.Entry):
-                child2.config(state='enabled')
-            elif isinstance(child2, Text):
-                child2.config(state='normal')
-        for child3 in grp_execution_mode.winfo_children():
-            if isinstance(child3, ttk.Button):
-                child3.config(state='enabled')
-            elif isinstance(child3, ttk.Radiobutton):
-                child3.config(state='enabled')
-            elif isinstance(child3, ttk.Entry):
-                child3.config(state='enabled')
-            elif isinstance(child3, Text):
-                child3.config(state='normal')
-        var1.set(1)
-        rdo_option_1.invoke()
+        try:
+            # Attempt to connect to the VISA resource
+            instrument_connect(rm, my_instr, instr_resource_string.get(), 20000, 1, 1, 1)
+
+            # A successful connection should change the state of the connect button
+            btn_connect.config(text="Disconnect")
+            is_connected.set(True)
+
+            for child in grp_single_command_ops.winfo_children():
+                child.config(state='enabled')
+            for child2 in grp_multi_command_ops.winfo_children():
+                if isinstance(child2, ttk.Button):
+                    child2.config(state='enabled')
+                elif isinstance(child2, ttk.Radiobutton):
+                    child2.config(state='enabled')
+                elif isinstance(child2, ttk.Entry):
+                    child2.config(state='enabled')
+                elif isinstance(child2, Text):
+                    child2.config(state='normal')
+            for child3 in grp_execution_mode.winfo_children():
+                if isinstance(child3, ttk.Button):
+                    child3.config(state='enabled')
+                elif isinstance(child3, ttk.Radiobutton):
+                    child3.config(state='enabled')
+                elif isinstance(child3, ttk.Entry):
+                    child3.config(state='enabled')
+                elif isinstance(child3, Text):
+                    child3.config(state='normal')
+            var1.set(1)
+            rdo_option_1.invoke()
+
+        except visa.errors.VisaIOError:
+            print("VISA error occurred")
+
     else:
         btn_connect.config(text="Connect")
         is_connected.set(False)
@@ -95,6 +304,11 @@ def button_connect_disconnect_press(*args):
 
 
 def button_instruments_refresh(*args):
+    # Clear the Combobox text and, knowing it'll be clear invoke the combo action to disable controls
+    cbo_instruments.set("")
+    cbo_changed_instruments()
+
+    # scan for available resources then populate
     alt_resources_tuple = rm.list_resources()
     cbo_instruments['values'] = alt_resources_tuple
     return
@@ -103,13 +317,16 @@ def button_instruments_refresh(*args):
 def chk_a_action(*args):
     if chk_a_val.get() == 1:
         dud = 1
-        #lbl_a_text.set("This is message A")
+        # lbl_a_text.set("This is message A")
     else:
         dud = 2
     return
 
 
+# ==========================================================================================
 # Place our main UI definition here
+# ==========================================================================================
+
 root = Tk()
 root.title("Keithley Remote Programming Learning Tool 2.0")
 root.columnconfigure(0, weight=1)   # helps with frame/app resizing on the fly
@@ -123,7 +340,7 @@ root.geometry("778x400")
 is_connected = BooleanVar()
 is_connected.set(False)
 cbo_instr_variable = StringVar()
-instrument_resource_string = StringVar()
+instr_resource_string = StringVar()
 cbo_single_cmd_variable = StringVar()
 seconds = StringVar()
 seconds.set("1")
@@ -142,6 +359,7 @@ cbo_stop_bits_variable = StringVar()
 cbo_flow_ctrl_variable = StringVar()
 cbo_term_char_variable = StringVar()
 
+
 # Created a main frame (within the root GUI) on which to place controls. This allows for adding padding
 # to be added as needed around the perimeter of the UI and provide a more appealing appearance.
 main_frame = ttk.Frame(root, padding="5 5 5 5", height=300, width=600)
@@ -153,9 +371,9 @@ main_frame.columnconfigure(0, weight=1)
 grp_instruments = ttk.Labelframe(main_frame, text='Instrument Select', pad=(5, 5, 5, 5), height=300, width=150)
 
 cbo_instruments = ttk.Combobox(grp_instruments, textvariable=cbo_instr_variable, width=48)
-cbo_instruments.bind('<<ComboboxSelected>>', cbo_changed)
+cbo_instruments.bind('<<ComboboxSelected>>', cbo_changed_instruments)
 cbo_instruments['values'] = resources_tuple
-cbo_instruments.current(0)
+cbo_instruments.current()   # leave blank so that we can force the operator to select from available options
 
 btn_connect = ttk.Button(grp_instruments, text="Connect", command=button_connect_disconnect_press, width=23)
 btn_refresh = ttk.Button(grp_instruments, text="Refresh", command=button_instruments_refresh)
@@ -269,6 +487,7 @@ cbo_stop_bits.grid(column=1, row=2, sticky=E)
 cbo_flow_ctrl.grid(column=1, row=3, sticky=E)
 cbo_term_char.grid(column=1, row=4, sticky=E)
 
+cbo_changed_instruments()
 
 # next group controls on the main GUI....
 grp_single_command_ops.grid(column=0, row=1, sticky=(N, S, W, E))
@@ -281,10 +500,10 @@ btn_clear_command_list.grid(column=2, row=1, sticky=(W, E))
 grp_multi_command_ops.grid(column=1, row=0, rowspan=2, sticky=(N, S, W, E))
 txt_multi_command_text.grid(column=0, row=0, sticky=(N, S, W, E), rowspan=4)
 s.grid(column=1, row=0, sticky=(N, S), rowspan=4)
-btn_send_commands.grid(column=2, row=0, sticky=(N))
-btn_clear_commands.grid(column=2, row=1, sticky=(N))
-btn_save_commands.grid(column=2, row=2, sticky=(N))
-btn_load_commands.grid(column=2, row=3, sticky=(N))
+btn_send_commands.grid(column=2, row=0, sticky=N)
+btn_clear_commands.grid(column=2, row=1, sticky=N)
+btn_save_commands.grid(column=2, row=2, sticky=N)
+btn_load_commands.grid(column=2, row=3, sticky=N)
 grp_execution_mode.grid(column=0, row=4, sticky=(W, E), columnspan=3)
 
 rdo_option_1.grid(column=0, row=0, sticky=(W, E))

@@ -10,6 +10,7 @@ my_instr = None
 # Place VISA function utilities here
 # ==========================================================================================
 echo_commands = 0
+do_simulate = 1
 
 """*********************************************************************************
     Function: instrument_connect(resource_mgr, instrument_resource_string, timeout,
@@ -43,15 +44,16 @@ echo_commands = 0
 
 def instrument_connect(resource_mgr, instrument_object, instrument_resource_string, timeout, do_id_query, do_reset,
                        do_clear):
-    instrument_object = resource_mgr.open_resource(instrument_resource_string)
-    if do_id_query == 1:
-        print(instrument_query(instrument_object, "*IDN?"))
-    if do_reset == 1:
-        instrument_write(instrument_object, "*RST")
-    if do_clear == 1:
-        instrument_object.clear()
-    instrument_object.timeout = timeout
-    return resource_mgr, instrument_object
+    if not do_simulate:
+        instrument_object = resource_mgr.open_resource(instrument_resource_string)
+        if do_id_query == 1:
+            print(instrument_query(instrument_object, "*IDN?"))
+        if do_reset == 1:
+            instrument_write(instrument_object, "*RST")
+        if do_clear == 1:
+            instrument_object.clear()
+        instrument_object.timeout = timeout
+        return resource_mgr, instrument_object
 
 
 def instrument_connect_alt(timeout, do_id_query, do_reset, do_clear):
@@ -84,7 +86,8 @@ def instrument_connect_alt(timeout, do_id_query, do_reset, do_clear):
 def instrument_write(instrument_object, my_command):
     if echo_commands == 1:
         print(my_command)
-    instrument_object.write(my_command)
+    if not do_simulate:
+        instrument_object.write(my_command)
     return
 
 
@@ -104,7 +107,10 @@ def instrument_write(instrument_object, my_command):
 
 
 def instrument_read(instrument_object):
-    return instrument_object.read()
+    if not do_simulate:
+        return instrument_object.read()
+    else:
+        return ""
 
 
 """*********************************************************************************
@@ -129,7 +135,10 @@ def instrument_read(instrument_object):
 def instrument_query(instrument_object, my_command):
     if echo_commands == 1:
         print(my_command)
-    return instrument_object.query(my_command)
+    if not do_simulate:
+        return instrument_object.query(my_command)
+    else:
+        return ""
 
 
 """*********************************************************************************
@@ -146,7 +155,8 @@ def instrument_query(instrument_object, my_command):
 
 
 def instrument_disconnect(instrument_object):
-    instrument_object.close()
+    if not do_simulate:
+        instrument_object.close()
     return
 
 
@@ -214,8 +224,8 @@ def cbo_changed_instruments(*args):
 
 
 def cbo_single_command_changed(*args):
-    instr_resource_string.set(cbo_single_cmd_variable.get())
-
+    single_command_string.set(cbo_single_cmd_variable.get())
+    #print(single_command_string.get())
     return
 
 
@@ -279,6 +289,9 @@ def button_connect_disconnect_press(*args):
 
     else:
         btn_connect.config(text="Connect")
+
+        instrument_disconnect(my_instr)
+
         is_connected.set(False)
         for child in grp_single_command_ops.winfo_children():
             child.config(state='disabled')
@@ -300,6 +313,8 @@ def button_connect_disconnect_press(*args):
                 child3.config(state='disabled')
             elif isinstance(child3, Text):
                 child3.config(state='disabled')
+
+
     return
 
 
@@ -323,6 +338,47 @@ def chk_a_action(*args):
     return
 
 
+def button_write_press(*args):
+    # get the text from the combo box...
+    single_command_string.set(cbo_single_cmd_variable.get())
+
+    # then write the command to the instrument
+    instrument_write(my_instr, single_command_string.get())
+
+    # append the written command to the combo box list...
+    cbo_single_commands['values'] = tuple(list(cbo_single_commands['values']) + [single_command_string.get()])
+
+    return
+
+
+def button_query_press(*args):
+    # get the text from the combo box...
+    single_command_string.set(cbo_single_cmd_variable.get())
+
+    # issue the query command to the instrument
+    temp_qury_var = instrument_query(my_instr, single_command_string.get())
+
+    # Add the output to the blah.....
+
+
+    # append the written command to the combo box list...
+    cbo_single_commands['values'] = tuple(list(cbo_single_commands['values']) + [single_command_string.get()])
+    return
+
+
+def button_clear_list_press(*args):
+    # remove all the contents of the combo box
+    tmp_tuple_cnt = len(cbo_single_commands['values'])
+    cbo_single_commands.delete(0, END)
+    cbo_single_cmd_variable.set("")
+    single_command_string.set(cbo_single_cmd_variable.get())
+    #tmp_tuple = cbo_single_commands['values']
+    # reinitialize with the starting values
+    cbo_single_commands['values'] = ['*IDN?', '*RST', '*TRG']
+
+    return
+
+
 # ==========================================================================================
 # Place our main UI definition here
 # ==========================================================================================
@@ -342,6 +398,7 @@ is_connected.set(False)
 cbo_instr_variable = StringVar()
 instr_resource_string = StringVar()
 cbo_single_cmd_variable = StringVar()
+single_command_string = StringVar()
 seconds = StringVar()
 seconds.set("1")
 # variables for managing the radio buttons in the multi-command exceution group
@@ -420,9 +477,9 @@ cbo_single_commands = ttk.Combobox(grp_single_command_ops,
 
 cbo_single_commands.bind('<<ComboboxSelected>>', cbo_single_command_changed)
 cbo_single_commands['values'] = ['*IDN?', '*RST', '*TRG']
-btn_cmd_write = ttk.Button(grp_single_command_ops, text="Write")
-btn_cmd_query = ttk.Button(grp_single_command_ops, text="Query")
-btn_clear_command_list = ttk.Button(grp_single_command_ops, text="Clear List")
+btn_cmd_write = ttk.Button(grp_single_command_ops, text="Write", command=button_write_press)
+btn_cmd_query = ttk.Button(grp_single_command_ops, text="Query", command=button_query_press)
+btn_clear_command_list = ttk.Button(grp_single_command_ops, text="Clear List", command=button_clear_list_press)
 
 
 # Create a group box (aka Labelframe) to hold the multi command operation tools....

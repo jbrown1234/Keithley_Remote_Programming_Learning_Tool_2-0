@@ -6,11 +6,5 @@
 
 Tkinter versions supported: 8.5, 8.6
 
-To install Tkinter on Windows or Linux:
-<br><br>
-pip install tk
-<br><br>
-or...
-<br><br>
-pip3 install tk
+Tkinter is part of Python standard library as of Python 3.1. 
     

@@ -383,6 +383,8 @@ def button_send_commands_press(*args):
     # Read in all text from the Text control and split by line feed character into a list
     temp_container = txt_multi_command_text.get(1.0, END).split('\n')
 
+    enable_disable_multi_cmd_buttons(False)
+
     # Issue the commands depending on the setting of the selected execution mode
     if var1.get() == 1:
         # Do normal command at a time send
@@ -395,6 +397,9 @@ def button_send_commands_press(*args):
     elif var1.get() == 3:
         # Do step-wise command sending
         step_wise_iterative_send_commands(temp_container)
+
+    enable_disable_multi_cmd_buttons(True)
+
     return
 
 
@@ -418,6 +423,22 @@ def sequential_iterative_send_commands(command_list, do_timed=0, delay_s=1.0):
 def step_wise_iterative_send_commands(command_list):
     return
 
+
+def enable_disable_multi_cmd_buttons(is_enabled):
+    # as of 2021-05-30 - this is a "good intentions" section of code that, while it seems to be coded properly
+    # it does not do what it is supposed to (disable and enable the target buttons)
+    state_string = 'enabled'
+    if not is_enabled:
+        btn_send_commands.config(state='disabled')
+        btn_clear_commands.config(state='disabled')
+        btn_load_commands.config(state='disabled')
+        btn_save_commands.config(state='disabled')
+    else:
+        btn_send_commands.config(state='enabled')
+        btn_clear_commands.config(state='enabled')
+        btn_load_commands.config(state='enabled')
+        btn_save_commands.config(state='enabled')
+    return
 
 # ==========================================================================================
 # Place our main UI definition here

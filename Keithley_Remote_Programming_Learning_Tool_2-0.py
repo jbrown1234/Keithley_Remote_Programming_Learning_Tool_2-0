@@ -368,14 +368,51 @@ def button_query_press(*args):
 
 def button_clear_list_press(*args):
     # remove all the contents of the combo box
-    tmp_tuple_cnt = len(cbo_single_commands['values'])
+    #tmp_tuple_cnt = len(cbo_single_commands['values'])
     cbo_single_commands.delete(0, END)
     cbo_single_cmd_variable.set("")
     single_command_string.set(cbo_single_cmd_variable.get())
-    #tmp_tuple = cbo_single_commands['values']
     # reinitialize with the starting values
     cbo_single_commands['values'] = ['*IDN?', '*RST', '*TRG']
 
+    return
+
+
+def button_send_commands_press(*args):
+    # Read in all text from the Text control and split by line feed character into a list
+    temp_container = txt_multi_command_text.get(1.0, END).split('\n')
+
+    # Issue the commands depending on the setting of the selected execution mode
+    if var1.get() == 1:
+        # Do normal command at a time send
+        sequential_iterative_send_commands(temp_container)
+    elif var1.get() == 2:
+        # Do timed command sending
+        timed_iterative_send_commands(temp_container, 1.0)
+    elif var1.get() == 3:
+        # Do step-wise command sending
+        step_wise_iterative_send_commands(temp_container)
+    return
+
+
+def sequential_iterative_send_commands(command_list):
+    for i, cmd in enumerate(command_list):
+        if "?" in cmd:
+            response = instrument_query(my_instr, cmd)
+        elif "print(" in cmd:
+            response = instrument_query(my_instr, cmd)
+        elif "printbuffer(" in cmd:
+            response = instrument_query(my_instr, cmd)
+        else:
+            instrument_write(my_instr, cmd)
+    return
+
+
+def timed_iterative_send_commands(command_list, delay_value):
+    return
+
+
+def step_wise_iterative_send_commands(command_list):
     return
 
 
@@ -492,7 +529,7 @@ txt_multi_command_text = Text(grp_multi_command_ops, height=15, width=40)
 s = ttk.Scrollbar(grp_multi_command_ops, orient=VERTICAL, command=txt_multi_command_text.yview)
 
 txt_multi_command_text['yscrollcommand'] = s.set         # reference the scrollbar action to the list box scroll command
-btn_send_commands = ttk.Button(grp_multi_command_ops, text="Send\nCommands")
+btn_send_commands = ttk.Button(grp_multi_command_ops, text="Send\nCommands", command=button_send_commands_press)
 btn_clear_commands = ttk.Button(grp_multi_command_ops, text="Clear All\nCommands")
 btn_save_commands = ttk.Button(grp_multi_command_ops, text="Save\nCommands")
 btn_load_commands = ttk.Button(grp_multi_command_ops, text="Load\nCommands")

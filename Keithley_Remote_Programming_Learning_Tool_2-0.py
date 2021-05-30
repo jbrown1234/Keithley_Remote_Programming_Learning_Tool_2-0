@@ -1,5 +1,8 @@
 from tkinter import *
 from tkinter import ttk
+from tkinter import filedialog
+from tkinter import messagebox
+
 import pyvisa as visa
 import time
 
@@ -378,7 +381,6 @@ def button_clear_list_press(*args):
 
     return
 
-
 def button_send_commands_press(*args):
     # Read in all text from the Text control and split by line feed character into a list
     temp_container = txt_multi_command_text.get(1.0, END).split('\n')
@@ -444,6 +446,28 @@ def enable_disable_multi_cmd_buttons(is_enabled):
 def button_clear_all_commands_press(*args):
     txt_multi_command_text.delete(1.0, END)
     return
+
+
+def button_save_commands_press(*args):
+    try:
+        myFile = filedialog.asksaveasfile(mode='w',
+                                          defaultextension='.txt',
+                                          title="Save Commands",
+                                          filetypes=[('TXT', '.txt'), ('TSP', '.tsp'), ('All Files', '*')])  # ('TSP', '.tsp'), ('Lua', '.lua'),
+        #myFile = filedialog.asksaveasfile(mode='w', title="Select file",
+                          #filetypes=(("jpeg files", "*.jpg"), ("all files", "*.*")))
+
+
+        if myFile is None:
+            return
+        data = txt_multi_command_text.get(1.0, END)
+        myFile.write(data)
+        myFile.close()
+    except Exception:
+            #tkMessageBox.showerror('Error Saving Grammar', 'Unable to open file: %r' % filename)
+            messagebox._show(title="Error Saving File", message="Unable to save file", _icon='error', _type='okcancel')
+    return
+
 
 # ==========================================================================================
 # Place our main UI definition here
@@ -560,7 +584,7 @@ s = ttk.Scrollbar(grp_multi_command_ops, orient=VERTICAL, command=txt_multi_comm
 txt_multi_command_text['yscrollcommand'] = s.set         # reference the scrollbar action to the list box scroll command
 btn_send_commands = ttk.Button(grp_multi_command_ops, text="Send\nCommands", command=button_send_commands_press)
 btn_clear_commands = ttk.Button(grp_multi_command_ops, text="Clear All\nCommands", command=button_clear_all_commands_press)
-btn_save_commands = ttk.Button(grp_multi_command_ops, text="Save\nCommands")
+btn_save_commands = ttk.Button(grp_multi_command_ops, text="Save\nCommands", command=button_save_commands_press)
 btn_load_commands = ttk.Button(grp_multi_command_ops, text="Load\nCommands")
 grp_execution_mode = ttk.Labelframe(grp_multi_command_ops, text="Multi-command Execution Mode", pad=(5, 5, 5, 5))
 btn_temp = ttk.Button(grp_execution_mode, text="temp")

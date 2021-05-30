@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter import ttk
 import pyvisa as visa
+import time
 
 rm = visa.ResourceManager()
 resources_tuple = rm.list_resources()
@@ -388,14 +389,16 @@ def button_send_commands_press(*args):
         sequential_iterative_send_commands(temp_container)
     elif var1.get() == 2:
         # Do timed command sending
-        timed_iterative_send_commands(temp_container, 1.0)
+        # Get the time from the Entry widget associated with the timed radio option
+        delay_time = float(seconds.get())
+        sequential_iterative_send_commands(temp_container, do_timed=1, delay_s=delay_time)
     elif var1.get() == 3:
         # Do step-wise command sending
         step_wise_iterative_send_commands(temp_container)
     return
 
 
-def sequential_iterative_send_commands(command_list):
+def sequential_iterative_send_commands(command_list, do_timed=0, delay_s=1.0):
     for i, cmd in enumerate(command_list):
         if "?" in cmd:
             response = instrument_query(my_instr, cmd)
@@ -405,10 +408,10 @@ def sequential_iterative_send_commands(command_list):
             response = instrument_query(my_instr, cmd)
         else:
             instrument_write(my_instr, cmd)
-    return
 
-
-def timed_iterative_send_commands(command_list, delay_value):
+        # if set to include a delay time, implement a sleep time in seconds
+        if do_timed == 1:
+            time.sleep(delay_s)
     return
 
 

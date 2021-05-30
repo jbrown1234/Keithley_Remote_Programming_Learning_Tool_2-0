@@ -440,6 +440,11 @@ def enable_disable_multi_cmd_buttons(is_enabled):
         btn_save_commands.config(state='enabled')
     return
 
+
+def button_clear_all_commands_press(*args):
+    txt_multi_command_text.delete(1.0, END)
+    return
+
 # ==========================================================================================
 # Place our main UI definition here
 # ==========================================================================================
@@ -554,7 +559,7 @@ s = ttk.Scrollbar(grp_multi_command_ops, orient=VERTICAL, command=txt_multi_comm
 
 txt_multi_command_text['yscrollcommand'] = s.set         # reference the scrollbar action to the list box scroll command
 btn_send_commands = ttk.Button(grp_multi_command_ops, text="Send\nCommands", command=button_send_commands_press)
-btn_clear_commands = ttk.Button(grp_multi_command_ops, text="Clear All\nCommands")
+btn_clear_commands = ttk.Button(grp_multi_command_ops, text="Clear All\nCommands", command=button_clear_all_commands_press)
 btn_save_commands = ttk.Button(grp_multi_command_ops, text="Save\nCommands")
 btn_load_commands = ttk.Button(grp_multi_command_ops, text="Load\nCommands")
 grp_execution_mode = ttk.Labelframe(grp_multi_command_ops, text="Multi-command Execution Mode", pad=(5, 5, 5, 5))

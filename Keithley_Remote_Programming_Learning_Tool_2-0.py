@@ -372,7 +372,6 @@ def button_query_press(*args):
 
 def button_clear_list_press(*args):
     # remove all the contents of the combo box
-    #tmp_tuple_cnt = len(cbo_single_commands['values'])
     cbo_single_commands.delete(0, END)
     cbo_single_cmd_variable.set("")
     single_command_string.set(cbo_single_cmd_variable.get())
@@ -454,9 +453,6 @@ def button_save_commands_press(*args):
                                           defaultextension='.txt',
                                           title="Save Commands",
                                           filetypes=[('TXT', '.txt'), ('TSP', '.tsp'), ('All Files', '*')])  # ('TSP', '.tsp'), ('Lua', '.lua'),
-        #myFile = filedialog.asksaveasfile(mode='w', title="Select file",
-                          #filetypes=(("jpeg files", "*.jpg"), ("all files", "*.*")))
-
 
         if myFile is None:
             return
@@ -465,7 +461,32 @@ def button_save_commands_press(*args):
         myFile.close()
     except Exception:
             #tkMessageBox.showerror('Error Saving Grammar', 'Unable to open file: %r' % filename)
-            messagebox._show(title="Error Saving File", message="Unable to save file", _icon='error', _type='okcancel')
+            messagebox._show(title="Error Saving File", message="Unable to save file", _icon='error', _type='okcancel', encoding='udf8')
+    return
+
+
+def button_load_commands_press(*args):
+    try:
+        # have the user navigate to and select their file....
+        myFile = filedialog.askopenfile(defaultextension='.txt',
+                                        title="Save Commands",
+                                        filetypes=[('TXT', '.txt'), ('TSP', '.tsp'), ('All Files', '*')])
+        if myFile is None:
+            return
+
+        # read the contents of the file into a temporary variable
+        contnents = ""
+        with open(myFile.name) as f:
+            #contents = f.readlines()
+            contents = f.read()
+            f.close()
+
+        # populate our TextBox control with the file contents
+        txt_multi_command_text.insert(1.0, contents)
+
+    except Exception:
+        # tkMessageBox.showerror('Error Saving Grammar', 'Unable to open file: %r' % filename)
+        messagebox._show(title="Error Loading File", message="Unable to load file", _icon='error', _type='okcancel')
     return
 
 
@@ -585,7 +606,7 @@ txt_multi_command_text['yscrollcommand'] = s.set         # reference the scrollb
 btn_send_commands = ttk.Button(grp_multi_command_ops, text="Send\nCommands", command=button_send_commands_press)
 btn_clear_commands = ttk.Button(grp_multi_command_ops, text="Clear All\nCommands", command=button_clear_all_commands_press)
 btn_save_commands = ttk.Button(grp_multi_command_ops, text="Save\nCommands", command=button_save_commands_press)
-btn_load_commands = ttk.Button(grp_multi_command_ops, text="Load\nCommands")
+btn_load_commands = ttk.Button(grp_multi_command_ops, text="Load\nCommands", command=button_load_commands_press)
 grp_execution_mode = ttk.Labelframe(grp_multi_command_ops, text="Multi-command Execution Mode", pad=(5, 5, 5, 5))
 btn_temp = ttk.Button(grp_execution_mode, text="temp")
 rdo_option_1 = ttk.Radiobutton(grp_execution_mode,

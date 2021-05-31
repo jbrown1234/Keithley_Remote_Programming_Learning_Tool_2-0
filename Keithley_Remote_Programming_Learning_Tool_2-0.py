@@ -144,7 +144,7 @@ def instrument_query(instrument_object, my_command):
     if not do_simulate:
         return instrument_object.query(my_command)
     else:
-        return ""
+        return "Bummy value"
 
 
 """*********************************************************************************
@@ -354,6 +354,8 @@ def button_write_press(*args):
     # append the written command to the combo box list...
     cbo_single_commands['values'] = tuple(list(cbo_single_commands['values']) + [single_command_string.get()])
 
+    # add the command(s) to the end of the logging Text widget
+    txt_command_logger.insert(END, single_command_string.get() + "\n")
     return
 
 
@@ -361,11 +363,14 @@ def button_query_press(*args):
     # get the text from the combo box...
     single_command_string.set(cbo_single_cmd_variable.get())
 
+    # add the command(s) to the end of the logging Text widget
+    txt_command_logger.insert(END, single_command_string.get() + "\n")
+
     # issue the query command to the instrument
     temp_qury_var = instrument_query(my_instr, single_command_string.get())
 
-    # Add the output to the blah.....
-
+    # Add the output or return content to the end of the logging Text widget
+    txt_command_logger.insert(END, temp_qury_var + "\n")
 
     # append the written command to the combo box list...
     cbo_single_commands['values'] = tuple(list(cbo_single_commands['values']) + [single_command_string.get()])
@@ -489,6 +494,15 @@ def button_load_commands_press(*args):
     except Exception:
         # tkMessageBox.showerror('Error Saving Grammar', 'Unable to open file: %r' % filename)
         messagebox._show(title="Error Loading File", message="Unable to load file", _icon='error', _type='okcancel')
+    return
+
+
+def clear_logging_commands_from_text_widget(*args):
+    txt_command_logger.delete(1.0, END)
+    return
+
+
+def save_logging_commands_from_text_widget(*args):
     return
 
 
@@ -644,8 +658,8 @@ txt_command_logger = Text(grp_command_logging_tools, height=10, width=75)
 s_cmd = ttk.Scrollbar(grp_command_logging_tools, orient=VERTICAL, command=txt_command_logger.yview)
 
 txt_command_logger['yscrollcommand'] = s_cmd.set         # reference the scrollbar action to the list box scroll command
-btn_clear_logging_commands = ttk.Button(grp_command_logging_tools, text="Clear Log\nCommands")
-btn_save_logging_commands = ttk.Button(grp_command_logging_tools, text="Save Log\nCommands")
+btn_clear_logging_commands = ttk.Button(grp_command_logging_tools, text="Clear Log\nCommands", command=clear_logging_commands_from_text_widget)
+btn_save_logging_commands = ttk.Button(grp_command_logging_tools, text="Save Log\nCommands", command=save_logging_commands_from_text_widget)
 
 # grid up our controls on the main GUI....
 # instruments group controls

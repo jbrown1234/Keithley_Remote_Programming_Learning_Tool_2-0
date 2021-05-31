@@ -6,6 +6,8 @@ from tkinter import messagebox
 import pyvisa as visa
 import time
 
+# CONSIDER ADDING TOOLTIPS WITH THE CLASS FOUND HERE: https://code.activestate.com/recipes/576688-tooltip-for-tkinter/
+
 rm = visa.ResourceManager()
 resources_tuple = rm.list_resources()
 my_instr = None
@@ -501,7 +503,7 @@ root.rowconfigure(0, weight=1)      # helps with frame/app resizing on the fly
 # We define a geometry instead of independent height and width because the tkinter
 # base behavior of widgets appears to override the intended behavior, meaning our
 # sizes appear to get ignored after the widgets are gridded up.
-root.geometry("778x400")
+root.geometry("778x555")
 
 
 is_connected = BooleanVar()
@@ -632,6 +634,19 @@ txt_timed_s = ttk.Entry(grp_execution_mode, textvariable=seconds, state='disable
 lbl_timed_s = ttk.Label(grp_execution_mode, text=" s", state='disabled', width=16)
 btn_stepper = ttk.Button(grp_execution_mode, text="Step", state='disabled')
 
+# add a text control where commands and responses can be dumped as the user communicates with the instrument
+grp_command_logging_tools = ttk.Labelframe(main_frame,
+                                           text="Command Logging",
+                                           pad=(5, 5, 5, 5),
+                                           height=15,
+                                           width=250)
+txt_command_logger = Text(grp_command_logging_tools, height=10, width=75)
+s_cmd = ttk.Scrollbar(grp_command_logging_tools, orient=VERTICAL, command=txt_command_logger.yview)
+
+txt_command_logger['yscrollcommand'] = s_cmd.set         # reference the scrollbar action to the list box scroll command
+btn_clear_logging_commands = ttk.Button(grp_command_logging_tools, text="Clear Log\nCommands")
+btn_save_logging_commands = ttk.Button(grp_command_logging_tools, text="Save Log\nCommands")
+
 # grid up our controls on the main GUI....
 # instruments group controls
 grp_instruments.grid(column=0, row=0, sticky=(N, S, W, E))
@@ -657,14 +672,14 @@ cbo_term_char.grid(column=1, row=4, sticky=E)
 
 cbo_changed_instruments()
 
-# next group controls on the main GUI....
+# next group single command controls on the main GUI....
 grp_single_command_ops.grid(column=0, row=1, sticky=(N, S, W, E))
 cbo_single_commands.grid(column=0, row=0, columnspan=3)
 btn_cmd_write.grid(column=0, row=1, sticky=(W, E))
 btn_cmd_query.grid(column=1, row=1, sticky=(W, E))
 btn_clear_command_list.grid(column=2, row=1, sticky=(W, E))
 
-# next group controls on the main GUI....
+# next multi-command controls group controls on the main GUI....
 grp_multi_command_ops.grid(column=1, row=0, rowspan=2, sticky=(N, S, W, E))
 txt_multi_command_text.grid(column=0, row=0, sticky=(N, S, W, E), rowspan=4)
 s.grid(column=1, row=0, sticky=(N, S), rowspan=4)
@@ -684,6 +699,12 @@ lbl_timed_s.grid(column=2, row=1)
 rdo_option_3.grid(column=3, row=0, sticky=(W, E))
 btn_stepper.grid(column=3, row=1)
 
+# group the command logging tools on the main GUI....
+grp_command_logging_tools.grid(column=0, row=2, columnspan=2, sticky=(N, S, W, E))
+txt_command_logger.grid(column=0, row=0, rowspan=2,)
+s_cmd.grid(column=1, row=0, sticky=(N, S), rowspan=2)
+btn_clear_logging_commands.grid(column=2, row=0, sticky=(N, E))
+btn_save_logging_commands.grid(column=2, row=1, sticky=(N, E))
 
 # While the expected initial connected state will truly be false, we set to True here
 # then invoke the connect/disconnect function so that it sets the state of the controls.

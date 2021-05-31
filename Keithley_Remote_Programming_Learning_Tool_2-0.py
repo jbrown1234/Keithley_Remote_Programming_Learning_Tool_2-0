@@ -412,15 +412,31 @@ def button_send_commands_press(*args):
 
 
 def sequential_iterative_send_commands(command_list, do_timed=0, delay_s=1.0):
+    response = ""
+    is_query = False     # start with assuming the command is a write since this is the typical majority
     for i, cmd in enumerate(command_list):
+        # add the command(s) to the end of the logging Text widget
+        txt_command_logger.insert(END, cmd + "\n")
+        # refresh at least the text widget so that commands are updated as they are issued
+        txt_command_logger.update_idletasks()
         if "?" in cmd:
             response = instrument_query(my_instr, cmd)
+            is_query = True
         elif "print(" in cmd:
             response = instrument_query(my_instr, cmd)
+            is_query = True
         elif "printbuffer(" in cmd:
             response = instrument_query(my_instr, cmd)
+            is_query = True
         else:
             instrument_write(my_instr, cmd)
+
+        if is_query:
+            # Add the output or return content to the end of the logging Text widget
+            txt_command_logger.insert(END, response + "\n")
+            is_query = False
+            # refresh at least the text widget so that responses are updated as they are received
+            txt_command_logger.update_idletasks()
 
         # if set to include a delay time, implement a sleep time in seconds
         if do_timed == 1:
@@ -517,7 +533,6 @@ def save_logging_commands_from_text_widget(*args):
     except Exception:
             #tkMessageBox.showerror('Error Saving Grammar', 'Unable to open file: %r' % filename)
             messagebox._show(title="Error Saving File", message="Unable to save file", _icon='error', _type='okcancel', encoding='udf8')
-    return
     return
 
 

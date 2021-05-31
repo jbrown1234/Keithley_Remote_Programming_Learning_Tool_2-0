@@ -503,6 +503,21 @@ def clear_logging_commands_from_text_widget(*args):
 
 
 def save_logging_commands_from_text_widget(*args):
+    try:
+        myFile = filedialog.asksaveasfile(mode='w',
+                                          defaultextension='.txt',
+                                          title="Save Commands",
+                                          filetypes=[('TXT', '.txt'), ('All Files', '*')])  # ('TSP', '.tsp'), ('Lua', '.lua'),
+
+        if myFile is None:
+            return
+        data = txt_command_logger.get(1.0, END)
+        myFile.write(data)
+        myFile.close()
+    except Exception:
+            #tkMessageBox.showerror('Error Saving Grammar', 'Unable to open file: %r' % filename)
+            messagebox._show(title="Error Saving File", message="Unable to save file", _icon='error', _type='okcancel', encoding='udf8')
+    return
     return
 
 

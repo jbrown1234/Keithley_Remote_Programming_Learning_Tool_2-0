@@ -10,13 +10,13 @@ import time
 
 rm = visa.ResourceManager()
 resources_tuple = rm.list_resources()
-my_instr = None
+my_instr = visa.Resource
 
 # ==========================================================================================
 # Place VISA function utilities here
 # ==========================================================================================
 echo_commands = 0
-do_simulate = 1
+do_simulate = 0
 
 """*********************************************************************************
     Function: instrument_connect(resource_mgr, instrument_resource_string, timeout,
@@ -162,7 +162,7 @@ def instrument_query(instrument_object, my_command):
 
 def instrument_disconnect(instrument_object):
     if not do_simulate:
-        instrument_object.close()
+        my_instr.close(self=my_instr)
     return
 
 

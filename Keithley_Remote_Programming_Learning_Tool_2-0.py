@@ -15,8 +15,7 @@ import VISA_Communictions_Tools as comms
 mycomms = comms.VisaCommunications()
 if mycomms.resource_manager == None:
     mycomms.resource_manager = visa.ResourceManager()
-#print(mycomms.resource_manager.list_resources())
-#rm = visa.ResourceManager()
+
 resources_tuple = mycomms.resource_manager.list_resources()
 my_instr = mycomms.instrument_object
 
@@ -92,7 +91,6 @@ def cbo_changed_instruments(*args):
 
 def cbo_single_command_changed(*args):
     single_command_string.set(cbo_single_cmd_variable.get())
-    #print(single_command_string.get())
     return
 
 
@@ -166,7 +164,6 @@ def button_connect_disconnect_press(*args):
                                            do_id_query=1,
                                            do_reset=0,
                                            do_clear=0, )
-            #instrument_connect(rm, my_instr, instr_resource_string.get(), 20000, 1, 1, 1)
 
             # A successful connection should change the state of the connect button
             btn_connect.config(text="Disconnect")
@@ -238,7 +235,6 @@ def button_instruments_refresh(*args):
 
     # scan for available resources then populate
     alt_resources_tuple = mycomms.resource_manager.list_resources()
-    #alt_resources_tuple = rm.list_resources()
     cbo_instruments['values'] = alt_resources_tuple
     return
 
@@ -246,7 +242,6 @@ def button_instruments_refresh(*args):
 def chk_a_action(*args):
     if chk_a_val.get() == 1:
         dud = 1
-        # lbl_a_text.set("This is message A")
     else:
         dud = 2
     return
@@ -257,7 +252,6 @@ def button_write_press(*args):
     single_command_string.set(cbo_single_cmd_variable.get())
 
     # then write the command to the instrument
-    #instrument_write(my_instr, single_command_string.get())
     mycomms.instrument_write(single_command_string.get())
 
     # append the written command to the combo box list...
@@ -276,7 +270,6 @@ def button_query_press(*args):
     txt_command_logger.insert(END, single_command_string.get() + "\n")
 
     # issue the query command to the instrument
-    #temp_qury_var = instrument_query(my_instr, single_command_string.get())
     temp_qury_var = mycomms.instrument_query(single_command_string.get())
 
     # Add the output or return content to the end of the logging Text widget
@@ -330,19 +323,15 @@ def sequential_iterative_send_commands(command_list, do_timed=0, delay_s=1.0):
         # refresh at least the text widget so that commands are updated as they are issued
         txt_command_logger.update_idletasks()
         if "?" in cmd:
-            #response = instrument_query(my_instr, cmd)
             response = mycomms.instrument_query(cmd)
             is_query = True
         elif "print(" in cmd:
-            #response = instrument_query(my_instr, cmd)
             response = mycomms.instrument_query(cmd)
             is_query = True
         elif "printbuffer(" in cmd:
-            #response = instrument_query(my_instr, cmd)
             response = mycomms.instrument_query(cmd)
             is_query = True
         else:
-            #instrument_write(my_instr, cmd)
             mycomms.instrument_write(cmd)
 
         if is_query:
@@ -397,7 +386,6 @@ def button_save_commands_press(*args):
         myFile.write(data)
         myFile.close()
     except Exception:
-            #tkMessageBox.showerror('Error Saving Grammar', 'Unable to open file: %r' % filename)
             messagebox._show(title="Error Saving File", message="Unable to save file", _icon='error', _type='okcancel', encoding='udf8')
     return
 
@@ -412,9 +400,7 @@ def button_load_commands_press(*args):
             return
 
         # read the contents of the file into a temporary variable
-        contnents = ""
         with open(myFile.name) as f:
-            #contents = f.readlines()
             contents = f.read()
             f.close()
 

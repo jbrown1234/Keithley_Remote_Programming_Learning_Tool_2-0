@@ -4,166 +4,27 @@ from tkinter import filedialog
 from tkinter import messagebox
 
 import pyvisa as visa
+import pyvisa.constants as pyconst
+
 import time
+
+import VISA_Communictions_Tools as comms
 
 # CONSIDER ADDING TOOLTIPS WITH THE CLASS FOUND HERE: https://code.activestate.com/recipes/576688-tooltip-for-tkinter/
 
-rm = visa.ResourceManager()
-resources_tuple = rm.list_resources()
-my_instr = visa.Resource
+mycomms = comms.VisaCommunications()
+if mycomms.resource_manager == None:
+    mycomms.resource_manager = visa.ResourceManager()
+#print(mycomms.resource_manager.list_resources())
+#rm = visa.ResourceManager()
+resources_tuple = mycomms.resource_manager.list_resources()
+my_instr = mycomms.instrument_object
 
 # ==========================================================================================
 # Place VISA function utilities here
 # ==========================================================================================
 echo_commands = 0
 do_simulate = 0
-
-"""*********************************************************************************
-    Function: instrument_connect(resource_mgr, instrument_resource_string, timeout,
-                                 do_id_query, do_reset, do_clear) 
-    Purpose: Open an instance of an instrument object for remote communication.
-    Parameters:
-        resource_mgr (object) - Instance of a resource manager object.
-        instrument_object (object) - Instance of an instrument object to be initialized
-                                     within this function. 
-
-        instrument_resource_string (string) - The VISA resource string associated with
-                                              a specific instrument defining its connection
-                                              characteristics (communications type, model,
-                                              serial number, etc.)
-        timeout (int) - Time in milliseconds to wait before the communication transaction
-                        with the target instrument is considered failed (timed out)
-        do_id_query (int) - A flag that determines whether or not to query and print the 
-                            instrument ID string. 
-        do_reset (int) - A flag that determines whether or not to issue a reset command to
-                         the instrument during this connection. 
-        do_clear (int) - A flag that determines whether or not to issue a clear command to 
-                         the instrument during this connection. 
-
-    Returns:
-        None
-
-    Revisions:
-        2019-08-07    JJB    Initial revision.
-*********************************************************************************"""
-
-
-def instrument_connect(resource_mgr, instrument_object, instrument_resource_string, timeout, do_id_query, do_reset,
-                       do_clear):
-    if not do_simulate:
-        instrument_object = resource_mgr.open_resource(instrument_resource_string)
-        if do_id_query == 1:
-            print(instrument_query(instrument_object, "*IDN?"))
-        if do_reset == 1:
-            instrument_write(instrument_object, "*RST")
-        if do_clear == 1:
-            instrument_object.clear()
-        instrument_object.timeout = timeout
-        return resource_mgr, instrument_object
-
-
-def instrument_connect_alt(timeout, do_id_query, do_reset, do_clear):
-    my_instr = rm.open_resource(instr_resource_string.get())
-    if do_id_query == 1:
-        print(instrument_query(my_instr, "*IDN?"))
-    if do_reset == 1:
-        instrument_write(my_instr, "*RST")
-    if do_clear == 1:
-        my_instr.clear()
-    my_instr.timeout = timeout
-    return
-
-
-"""*********************************************************************************
-    Function: instrument_write(instrument_object, my_command)
-    Purpose: Issue controlling commands to the target instrument.
-    Parameters:
-        instrument_object (object) - Instance of an instrument object.
-
-        my_command (string) - The command issued to the instrument to make it 
-                              perform some action or service. 
-    Returns:
-        None
-    Revisions:
-        2019-08-21    JJB    Initial revision.
-*********************************************************************************"""
-
-
-def instrument_write(instrument_object, my_command):
-    if echo_commands == 1:
-        print(my_command)
-    if not do_simulate:
-        instrument_object.write(my_command)
-    return
-
-
-"""*********************************************************************************
-    Function: instrument_read(instrument_object)
-    Purpose: Used to read commands from the instrument.
-    Parameters:
-        instrument_object (object) - Instance of an instrument object.
-
-    Returns:
-        <<<reply>>> (string) - The requested information returned from the 
-                    target instrument. Obtained by way of a caller
-                    to instrument_read().
-    Revisions:
-        2019-08-21    JJB    Initial revision.
-*********************************************************************************"""
-
-
-def instrument_read(instrument_object):
-    if not do_simulate:
-        return instrument_object.read()
-    else:
-        return ""
-
-
-"""*********************************************************************************
-    Function: instrument_query(instrument_object, my_command)
-    Purpose: Used to send commands to the instrument  and obtain an information string from the instrument.
-             Note that the information received will depend on the command sent and will be in string
-             format.
-    Parameters:
-        instrument_object (object) - Instance of an instrument object.
-
-        my_command (string) - The command issued to the instrument to make it 
-                      perform some action or service. 
-    Returns:
-        <<<reply>>> (string) - The requested information returned from the 
-                    target instrument. Obtained by way of a caller
-                    to instrument_read().
-    Revisions:
-        2019-08-21    JJB    Initial revision.
-*********************************************************************************"""
-
-
-def instrument_query(instrument_object, my_command):
-    if echo_commands == 1:
-        print(my_command)
-    if not do_simulate:
-        return instrument_object.query(my_command)
-    else:
-        return "Bummy value"
-
-
-"""*********************************************************************************
-    Function: instrument_disconnect(instrument_object)
-    Purpose: Break the VISA connection between the controlling computer
-             and the target instrument.
-    Parameters:
-        instrument_object (object) - Instance of an instrument object.
-    Returns:
-        None
-    Revisions:
-        2019-08-21    JJB    Initial revision.
-*********************************************************************************"""
-
-
-def instrument_disconnect(instrument_object):
-    if not do_simulate:
-        my_instr.close(self=my_instr)
-    return
 
 
 # ==========================================================================================
@@ -261,7 +122,51 @@ def button_connect_disconnect_press(*args):
     if not is_connected.get():
         try:
             # Attempt to connect to the VISA resource
-            instrument_connect(rm, my_instr, instr_resource_string.get(), 20000, 1, 1, 1)
+            if "ASRL" in instr_resource_string.get():
+                if "None" in cbo_parity_variable.get():
+                    _parity = pyconst.Parity.none
+                elif "Odd" in cbo_parity_variable.get():
+                    _parity = pyconst.Parity.odd
+                elif "Even" in cbo_parity_variable.get():
+                    _parity = pyconst.Parity.even
+
+                if "1" in cbo_stop_bits_variable.get():
+                    _stop = pyconst.StopBits.one
+                elif "2" in cbo_stop_bits_variable.get():
+                    _stop = pyconst.StopBits.two
+                else:
+                    _stop = pyconst.StopBits.none
+
+                if "None" in cbo_flow_ctrl_variable.get():
+                    _flow = pyconst.ControlFlow.none
+                elif "RTS" in cbo_flow_ctrl_variable.get():
+                    _flow = pyconst.ControlFlow.rts
+                elif "XON" in cbo_flow_ctrl_variable.get():
+                    _flow = pyconst.ControlFlow.xon
+
+                if "n" in cbo_term_char_variable.get():
+                    _term = '\n'
+                else:
+                    _term = '\r'
+
+                mycomms.instrument_connect(instrument_resource_string=instr_resource_string.get(),
+                                           timeout=20000,
+                                           do_id_query=1,
+                                           do_reset=0,
+                                           do_clear=0,
+                                           baud_rate=int(cbo_baud_rate_variable.get()),
+                                           parity=_parity,
+                                           stop_bits=_stop,
+                                           flow_control=_flow,
+                                           read_terminator=_term
+                                           )
+            else:
+                mycomms.instrument_connect(instrument_resource_string=instr_resource_string.get(),
+                                           timeout=20000,
+                                           do_id_query=1,
+                                           do_reset=0,
+                                           do_clear=0, )
+            #instrument_connect(rm, my_instr, instr_resource_string.get(), 20000, 1, 1, 1)
 
             # A successful connection should change the state of the connect button
             btn_connect.config(text="Disconnect")
@@ -296,7 +201,9 @@ def button_connect_disconnect_press(*args):
     else:
         btn_connect.config(text="Connect")
 
-        instrument_disconnect(my_instr)
+        if mycomms.instrument_object is not None:
+            mycomms.instrument_disconnect()
+        #instrument_disconnect(my_instr)
 
         is_connected.set(False)
         for child in grp_single_command_ops.winfo_children():
@@ -330,7 +237,8 @@ def button_instruments_refresh(*args):
     cbo_changed_instruments()
 
     # scan for available resources then populate
-    alt_resources_tuple = rm.list_resources()
+    alt_resources_tuple = mycomms.resource_manager.list_resources()
+    #alt_resources_tuple = rm.list_resources()
     cbo_instruments['values'] = alt_resources_tuple
     return
 
@@ -349,7 +257,8 @@ def button_write_press(*args):
     single_command_string.set(cbo_single_cmd_variable.get())
 
     # then write the command to the instrument
-    instrument_write(my_instr, single_command_string.get())
+    #instrument_write(my_instr, single_command_string.get())
+    mycomms.instrument_write(single_command_string.get())
 
     # append the written command to the combo box list...
     cbo_single_commands['values'] = tuple(list(cbo_single_commands['values']) + [single_command_string.get()])
@@ -367,7 +276,8 @@ def button_query_press(*args):
     txt_command_logger.insert(END, single_command_string.get() + "\n")
 
     # issue the query command to the instrument
-    temp_qury_var = instrument_query(my_instr, single_command_string.get())
+    #temp_qury_var = instrument_query(my_instr, single_command_string.get())
+    temp_qury_var = mycomms.instrument_query(single_command_string.get())
 
     # Add the output or return content to the end of the logging Text widget
     txt_command_logger.insert(END, temp_qury_var + "\n")
@@ -420,16 +330,20 @@ def sequential_iterative_send_commands(command_list, do_timed=0, delay_s=1.0):
         # refresh at least the text widget so that commands are updated as they are issued
         txt_command_logger.update_idletasks()
         if "?" in cmd:
-            response = instrument_query(my_instr, cmd)
+            #response = instrument_query(my_instr, cmd)
+            response = mycomms.instrument_query(cmd)
             is_query = True
         elif "print(" in cmd:
-            response = instrument_query(my_instr, cmd)
+            #response = instrument_query(my_instr, cmd)
+            response = mycomms.instrument_query(cmd)
             is_query = True
         elif "printbuffer(" in cmd:
-            response = instrument_query(my_instr, cmd)
+            #response = instrument_query(my_instr, cmd)
+            response = mycomms.instrument_query(cmd)
             is_query = True
         else:
-            instrument_write(my_instr, cmd)
+            #instrument_write(my_instr, cmd)
+            mycomms.instrument_write(cmd)
 
         if is_query:
             # Add the output or return content to the end of the logging Text widget
@@ -604,7 +518,7 @@ cbo_baud.current(0)
 
 lbl_parity = ttk.Label(grp_serial_utils, text="Parity", width=10)
 cbo_parity = ttk.Combobox(grp_serial_utils, textvariable=cbo_parity_variable, width=10)
-cbo_parity['values'] = ['Odd', 'Even']
+cbo_parity['values'] = ['None', 'Odd', 'Even']
 cbo_parity.current(0)
 
 lbl_stop_bits = ttk.Label(grp_serial_utils, text="Stop Bits", width=10)

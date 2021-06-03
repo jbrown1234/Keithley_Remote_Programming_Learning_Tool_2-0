@@ -347,6 +347,18 @@ def sequential_iterative_send_commands(command_list, do_timed=0, delay_s=1.0):
     return
 
 
+def button_step_press(*args):
+    # if commands have not already been fetched from the Text widget, get them
+    print("step")
+    # how do we stop the stepping activity?
+    # what do we do with the other buttons? is it okay to change the Load Commands button text to "Stop Stepping"?
+    # Perhaps set a flag (or flags) to help control this
+    # Will also want/need to track or break apart commands
+    # Is there a way to highlight commands in the Text widget as the user steps over them? See the link
+    # https://stackoverflow.com/questions/3781670/how-to-highlight-text-in-a-tkinter-text-widget#3781773 as well as
+    # chapter 14 in Modern Tkinter for Busy Python Developers.
+    return
+
 def step_wise_iterative_send_commands(command_list):
     return
 
@@ -576,7 +588,7 @@ rdo_option_3 = ttk.Radiobutton(grp_execution_mode,
 lbl_rdo1_buffer = ttk.Label(grp_execution_mode, text="", state='disabled', width=24)
 txt_timed_s = ttk.Entry(grp_execution_mode, textvariable=seconds, state='disabled', width=8)
 lbl_timed_s = ttk.Label(grp_execution_mode, text=" s", state='disabled', width=16)
-btn_stepper = ttk.Button(grp_execution_mode, text="Step", state='disabled')
+btn_stepper = ttk.Button(grp_execution_mode, text="Step", state='disabled', command=button_step_press)
 
 # add a text control where commands and responses can be dumped as the user communicates with the instrument
 grp_command_logging_tools = ttk.Labelframe(main_frame,

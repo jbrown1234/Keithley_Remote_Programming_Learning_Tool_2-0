@@ -11,7 +11,7 @@ import time
 # ======================================================================
 class VisaCommunications:
     def __init__(self):
-        self.echo_commands = 1
+        self.echo_commands = 0
         self.resource_manager = None
         self.instrument_object = None
         self.pure_sockets = None

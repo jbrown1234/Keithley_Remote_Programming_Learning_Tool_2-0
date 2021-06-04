@@ -200,7 +200,6 @@ def button_connect_disconnect_press(*args):
 
         if mycomms.instrument_object is not None:
             mycomms.instrument_disconnect()
-        #instrument_disconnect(my_instr)
 
         is_connected.set(False)
         for child in grp_single_command_ops.winfo_children():

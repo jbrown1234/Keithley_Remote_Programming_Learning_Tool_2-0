@@ -23,8 +23,8 @@ my_instr = mycomms.instrument_object
 # Place VISA function utilities here
 # ==========================================================================================
 echo_commands = 0
-do_simulate = 0
-
+do_simulate = 1
+mycomms.simulate = 1
 
 # ==========================================================================================
 # Place widget function utilities here
@@ -289,6 +289,7 @@ def button_clear_list_press(*args):
 
     return
 
+
 def button_send_commands_press(*args):
     # Read in all text from the Text control and split by line feed character into a list
     temp_container = txt_multi_command_text.get(1.0, END).split('\n')
@@ -347,15 +348,42 @@ def sequential_iterative_send_commands(command_list, do_timed=0, delay_s=1.0):
 
 
 def button_step_press(*args):
-    # if commands have not already been fetched from the Text widget, get them
-    print("step")
-    # how do we stop the stepping activity?
-    # what do we do with the other buttons? is it okay to change the Load Commands button text to "Stop Stepping"?
-    # Perhaps set a flag (or flags) to help control this
-    # Will also want/need to track or break apart commands
-    # Is there a way to highlight commands in the Text widget as the user steps over them? See the link
-    # https://stackoverflow.com/questions/3781670/how-to-highlight-text-in-a-tkinter-text-widget#3781773 as well as
-    # chapter 14 in Modern Tkinter for Busy Python Developers.
+    # First click on the button should set a flag to note we're in step mode so the Load Commands button
+    # can be altered accordingly.
+    if in_step_mode.get() == 0:
+        # set the flag
+        in_step_mode.set(1)
+        # disable other mulit-line command buttons....
+        btn_send_commands.config(state='disabled')
+        btn_clear_commands.config(state='disabled')
+        btn_save_commands.config(state='disabled')
+
+        # Change the text on the Load Commands button because I'm lazy and don't want to add another button
+        # to the UI. Also, during the stepping (or other) process this button shouldn't be used anyway.
+        btn_load_commands.config(text="Stop\nStepping")
+
+        # Fetch commands out of the multi-line text area and initially put into a list for evaluation
+        temp_container = txt_multi_command_text.get(1.0, END).split('\n')
+
+        # Determine start stop points of each command line which (ideally) should be separated by
+        # the line feed character
+        for i, cmd in enumerate(temp_container):
+            print(cmd)
+
+
+    else:
+
+        # if commands have not already been fetched from the Text widget, get them
+        print("step")
+        # how do we stop the stepping activity? - I have an idea
+        # what do we do with the other buttons? is it okay to change the Load Commands button
+        # text to "Stop Stepping"? - yes
+        # Perhaps set a flag (or flags) to help control this.... yeah, yeah, yeah
+
+        # Will also want/need to track or break apart commands
+        # Is there a way to highlight commands in the Text widget as the user steps over them? See the link
+        # https://stackoverflow.com/questions/3781670/how-to-highlight-text-in-a-tkinter-text-widget#3781773 as well as
+        # chapter 14 in Modern Tkinter for Busy Python Developers.
     return
 
 def step_wise_iterative_send_commands(command_list):
@@ -402,25 +430,40 @@ def button_save_commands_press(*args):
 
 
 def button_load_commands_press(*args):
-    try:
-        # have the user navigate to and select their file....
-        myFile = filedialog.askopenfile(defaultextension='.txt',
-                                        title="Save Commands",
-                                        filetypes=[('TXT', '.txt'), ('TSP', '.tsp'), ('All Files', '*')])
-        if myFile is None:
-            return
+    if in_step_mode.get() == 0:
+        try:
+            # have the user navigate to and select their file....
+            myFile = filedialog.askopenfile(defaultextension='.txt',
+                                            title="Save Commands",
+                                            filetypes=[('TXT', '.txt'), ('TSP', '.tsp'), ('All Files', '*')])
+            if myFile is None:
+                return
 
-        # read the contents of the file into a temporary variable
-        with open(myFile.name) as f:
-            contents = f.read()
-            f.close()
+            # read the contents of the file into a temporary variable
+            with open(myFile.name) as f:
+                contents = f.read()
+                f.close()
 
-        # populate our TextBox control with the file contents
-        txt_multi_command_text.insert(1.0, contents)
+            # populate our TextBox control with the file contents
+            txt_multi_command_text.insert(1.0, contents)
 
-    except Exception:
-        # tkMessageBox.showerror('Error Saving Grammar', 'Unable to open file: %r' % filename)
-        messagebox._show(title="Error Loading File", message="Unable to load file", _icon='error', _type='okcancel')
+        except Exception:
+            # tkMessageBox.showerror('Error Saving Grammar', 'Unable to open file: %r' % filename)
+            messagebox._show(title="Error Loading File", message="Unable to load file", _icon='error', _type='okcancel')
+    else:
+        print("I'm a sexy stepper")
+        # Getting here means that the button text reads "Stop Stepping", so we need to revert to "Load Commands"
+        btn_load_commands.config(text="Load\nCommands")
+
+        # And we want the environment to know we're no longer doing step-mode stuff....
+        in_step_mode.set(0)
+        # enable mult-line command buttons
+        # disable other mulit-line command buttons....
+        btn_send_commands.config(state='normal')
+        btn_clear_commands.config(state='normal')
+        btn_save_commands.config(state='normal')
+
+        # clean up for any other flags....
     return
 
 
@@ -442,8 +485,8 @@ def save_logging_commands_from_text_widget(*args):
         myFile.write(data)
         myFile.close()
     except Exception:
-            #tkMessageBox.showerror('Error Saving Grammar', 'Unable to open file: %r' % filename)
-            messagebox._show(title="Error Saving File", message="Unable to save file", _icon='error', _type='okcancel', encoding='udf8')
+        #tkMessageBox.showerror('Error Saving Grammar', 'Unable to open file: %r' % filename)
+        messagebox._show(title="Error Saving File", message="Unable to save file", _icon='error', _type='okcancel', encoding='udf8')
     return
 
 
@@ -484,6 +527,7 @@ cbo_stop_bits_variable = StringVar()
 cbo_flow_ctrl_variable = StringVar()
 cbo_term_char_variable = StringVar()
 
+in_step_mode = IntVar()
 
 # Created a main frame (within the root GUI) on which to place controls. This allows for adding padding
 # to be added as needed around the perimeter of the UI and provide a more appealing appearance.

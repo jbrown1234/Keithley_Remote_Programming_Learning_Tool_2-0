@@ -68,41 +68,43 @@ class VisaCommunications:
         if resource_mgr == None:
             self.resource_manager = visa.ResourceManager()  # Opens the resource manager
 
-        self.instrument_object = self.resource_manager.open_resource(instrument_resource_string)
+        if not self.simulate:
+            self.instrument_object = self.resource_manager.open_resource(instrument_resource_string)
 
-        # Check for the SOCKET as part of the instrument ID string and set the following accordingly...
-        if "SOCKET" in instrument_resource_string:
-            self.instrument_object.write_termination = "\n"
-            self.instrument_object.read_termination = "\n"
-            self.instrument_object.send_end = True
-        elif "ASRL" in instrument_resource_string:
-            self.instrument_object.baud_rate = baud_rate
-            self.instrument_object.data_bits = data_bits
-            self.instrument_object.parity = parity   #pyconst.Parity.odd
-            self.instrument_object.stop_bits = stop_bits     #pyconst.StopBits.one
-            self.instrument_object.flow_control = flow_control
-            self.instrument_object.write_termination = "\n"
-            self.instrument_object.read_termination = read_terminator
-            self.instrument_object.send_end = True
-        elif "GPIB" in instrument_resource_string:
-            # do nothing or something...
-            print("GPIB")
-            self.pure_sockets = 0
-        elif "USB" in instrument_resource_string:
-            # do nothing or something...
-            print("USB")
-            self.pure_sockets = 0
-        else:
-            # Assume a sockets connection; set the flag
-            self.pure_sockets = 1
+            # Check for the SOCKET as part of the instrument ID string and set the following accordingly...
+            if "SOCKET" in instrument_resource_string:
+                self.instrument_object.write_termination = "\n"
+                self.instrument_object.read_termination = "\n"
+                self.instrument_object.send_end = True
+            elif "ASRL" in instrument_resource_string:
+                self.instrument_object.baud_rate = baud_rate
+                self.instrument_object.data_bits = data_bits
+                self.instrument_object.parity = parity   #pyconst.Parity.odd
+                self.instrument_object.stop_bits = stop_bits     #pyconst.StopBits.one
+                self.instrument_object.flow_control = flow_control
+                self.instrument_object.write_termination = "\n"
+                self.instrument_object.read_termination = read_terminator
+                self.instrument_object.send_end = True
+            elif "GPIB" in instrument_resource_string:
+                # do nothing or something...
+                print("GPIB")
+                self.pure_sockets = 0
+            elif "USB" in instrument_resource_string:
+                # do nothing or something...
+                print("USB")
+                self.pure_sockets = 0
+            else:
+                # Assume a sockets connection; set the flag
+                self.pure_sockets = 1
 
-        if do_id_query == 1:
-            print(self.instrument_query("*IDN?"))
-        if do_reset == 1:
-            self.instrument_write(self.instrument_object, "*RST")
-        if do_clear == 1:
-            self.instrument_object.clear()
-        self.instrument_object.timeout = timeout
+            if do_id_query == 1:
+                print(self.instrument_query("*IDN?"))
+            if do_reset == 1:
+                self.instrument_write(self.instrument_object, "*RST")
+            if do_clear == 1:
+                self.instrument_object.clear()
+            self.instrument_object.timeout = timeout
+
         return self.resource_manager, self.instrument_object
 
     """*********************************************************************************
@@ -122,7 +124,8 @@ class VisaCommunications:
         *********************************************************************************"""
 
     def instrument_disconnect(self):
-        self.instrument_object.close()
+        if not self.simulate:
+            self.instrument_object.close()
         return
     
     """*********************************************************************************
@@ -204,7 +207,7 @@ class VisaCommunications:
         if self.simulate != 1:
             return self.instrument_object.query(my_command)
         else:
-            return ""
+            return "Bubbles"
 
 
 

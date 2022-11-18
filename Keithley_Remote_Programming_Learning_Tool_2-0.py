@@ -1,3 +1,6 @@
+"""
+    Temp docstring
+"""
 from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
@@ -10,10 +13,11 @@ import time
 
 import VISA_Communictions_Tools as comms
 
-# CONSIDER ADDING TOOLTIPS WITH THE CLASS FOUND HERE: https://code.activestate.com/recipes/576688-tooltip-for-tkinter/
+# CONSIDER ADDING TOOLTIPS WITH THE CLASS FOUND HERE:
+# https://code.activestate.com/recipes/576688-tooltip-for-tkinter/
 
 mycomms = comms.VisaCommunications()
-if mycomms.resource_manager == None:
+if mycomms.resource_manager is None:
     mycomms.resource_manager = visa.ResourceManager()
 
 resources_tuple = mycomms.resource_manager.list_resources()
@@ -22,15 +26,19 @@ my_instr = mycomms.instrument_object
 # ==========================================================================================
 # Place VISA function utilities here
 # ==========================================================================================
-echo_commands = 0
-do_simulate = 1
+ECHO_CMDS = 0
+DO_SIMULATE = 1
 mycomms.simulate = 1
 
 # ==========================================================================================
 # Place widget function utilities here
 # ==========================================================================================
 
-def cbo_changed_instruments(*args):
+
+def cbo_changed_instruments():
+    """
+        Used to handle response to the change of the combo box listing.
+    """
     instr_resource_string.set(cbo_instr_variable.get())
 
     if "ASRL" in instr_resource_string.get():
@@ -86,15 +94,22 @@ def cbo_changed_instruments(*args):
                 child.config(state='disabled')
             elif isinstance(child, ttk.Checkbutton):
                 child.config(state='disabled')
-    return
 
 
-def cbo_single_command_changed(*args):
+def cbo_single_command_changed():
+    """
+        Method to handle when the drop-down control for single command
+        entry is changed by the operator. 
+    """
     single_command_string.set(cbo_single_cmd_variable.get())
-    return
 
 
-def frame_a_rdo_click(*args):
+def frame_a_rdo_click():
+    """
+        This method handles modifying the state of other controls in
+        response to the option the operator selects from the group of
+        radio buttons provided.
+    """
     if var1.get() == 1:
         my_text_var1.set("Option 1")
         # disable the time Entry and Label for timed and disable the step button
@@ -113,10 +128,13 @@ def frame_a_rdo_click(*args):
         txt_timed_s.config(state='disabled')
         lbl_timed_s.config(state='disabled')
         btn_stepper.config(state='enabled')
-    return
 
 
-def button_connect_disconnect_press(*args):
+def button_connect_disconnect_press():
+    """
+        This method handles the response/state of a broad set of controls once the
+        operator either connects or disconnects to an instrument resource.
+    """
     if not is_connected.get():
         try:
             # Attempt to connect to the VISA resource
@@ -224,11 +242,15 @@ def button_connect_disconnect_press(*args):
                 child3.config(state='disabled')
 
 
-    return
-
-
-def button_instruments_refresh(*args):
-    # Clear the Combobox text and, knowing it'll be clear invoke the combo action to disable controls
+def button_instruments_refresh():
+    """
+        This method handles the response to the click of the Refresh button,
+        clearing the combo box text, polling the resource manager for all
+        available instrument resources, then populating the combo options
+        accordingly.
+    """
+    # Clear the Combobox text and, knowing it'll be clear invoke the combo
+    # action to disable controls
     cbo_instruments.set("")
     cbo_changed_instruments()
 
@@ -238,7 +260,11 @@ def button_instruments_refresh(*args):
     return
 
 
-def chk_a_action(*args):
+def chk_a_action():
+    """
+        This method handles the state of the check box associated with the
+        sockets implementaion for the LAN options.
+    """
     if chk_a_val.get() == 1:
         dud = 1
     else:
@@ -246,7 +272,11 @@ def chk_a_action(*args):
     return
 
 
-def button_write_press(*args):
+def button_write_press():
+    """
+        This method is used in response to a user click on the 'Write' button
+        in the UI, issuing the command of focus to the instrument resource.
+    """
     # get the text from the combo box...
     single_command_string.set(cbo_single_cmd_variable.get())
 
@@ -254,14 +284,21 @@ def button_write_press(*args):
     mycomms.instrument_write(single_command_string.get())
 
     # append the written command to the combo box list...
-    cbo_single_commands['values'] = tuple(list(cbo_single_commands['values']) + [single_command_string.get()])
+    cbo_single_commands['values'] = tuple(list(cbo_single_commands['values'])
+                                          +
+                                          [single_command_string.get()])
 
     # add the command(s) to the end of the logging Text widget
     txt_command_logger.insert(END, single_command_string.get() + "\n")
     return
 
 
-def button_query_press(*args):
+def button_query_press():
+    """
+    This method is used in response to a user click on the 'Query' button in
+    the UI, first writing the command of focus then immediately attempting to
+    read back a response.
+    """
     # get the text from the combo box...
     single_command_string.set(cbo_single_cmd_variable.get())
 
@@ -275,11 +312,16 @@ def button_query_press(*args):
     txt_command_logger.insert(END, temp_qury_var + "\n")
 
     # append the written command to the combo box list...
-    cbo_single_commands['values'] = tuple(list(cbo_single_commands['values']) + [single_command_string.get()])
+    cbo_single_commands['values'] = tuple(list(cbo_single_commands['values'])
+                                          +
+                                          [single_command_string.get()])
     return
 
 
-def button_clear_list_press(*args):
+def button_clear_list_press():
+    """
+    This method handles the clearing of the single command 
+    """
     # remove all the contents of the combo box
     cbo_single_commands.delete(0, END)
     cbo_single_cmd_variable.set("")
@@ -287,10 +329,8 @@ def button_clear_list_press(*args):
     # reinitialize with the starting values
     cbo_single_commands['values'] = ['*IDN?', '*RST', '*TRG']
 
-    return
 
-
-def button_send_commands_press(*args):
+def button_send_commands_press():
     # Read in all text from the Text control and split by line feed character into a list
     temp_container = txt_multi_command_text.get(1.0, END).split('\n')
 

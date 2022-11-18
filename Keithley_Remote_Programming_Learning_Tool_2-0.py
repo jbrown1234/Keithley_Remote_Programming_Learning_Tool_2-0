@@ -6,10 +6,10 @@ from tkinter import ttk
 from tkinter import filedialog
 from tkinter import messagebox
 
+import time
+
 import pyvisa as visa
 import pyvisa.constants as pyconst
-
-import time
 
 import VISA_Communictions_Tools as comms
 
@@ -37,7 +37,7 @@ mycomms.simulate = 1
 
 def cbo_changed_instruments():
     """
-        Used to handle response to the change of the combo box listing.
+    Used to handle response to the change of the combo box listing.
     """
     instr_resource_string.set(cbo_instr_variable.get())
 
@@ -98,33 +98,36 @@ def cbo_changed_instruments():
 
 def cbo_single_command_changed():
     """
-        Method to handle when the drop-down control for single command
-        entry is changed by the operator. 
+    Method to handle when the drop-down control for single command
+    entry is changed by the operator.
     """
     single_command_string.set(cbo_single_cmd_variable.get())
 
 
 def frame_a_rdo_click():
     """
-        This method handles modifying the state of other controls in
-        response to the option the operator selects from the group of
-        radio buttons provided.
+    This method handles modifying the state of other controls in
+    response to the option the operator selects from the group of
+    radio buttons provided.
     """
     if var1.get() == 1:
         my_text_var1.set("Option 1")
-        # disable the time Entry and Label for timed and disable the step button
+        # disable the time Entry and Label for timed and disable the step
+        # button
         txt_timed_s.config(state='disabled')
         lbl_timed_s.config(state='disabled')
         btn_stepper.config(state='disabled')
     elif var1.get() == 2:
         my_text_var1.set("Option 2")
-        # enable the Entry and Label for the timed and disable the step button
+        # enable the Entry and Label for the timed and disable the step
+        # button
         txt_timed_s.config(state='enabled')
         lbl_timed_s.config(state='enabled')
         btn_stepper.config(state='disabled')
     elif var1.get() == 3:
         my_text_var1.set("Option 3")
-        # disable the Entry and Label for the timed and enable the step button
+        # disable the Entry and Label for the timed and enable the step
+        # button
         txt_timed_s.config(state='disabled')
         lbl_timed_s.config(state='disabled')
         btn_stepper.config(state='enabled')
@@ -132,8 +135,8 @@ def frame_a_rdo_click():
 
 def button_connect_disconnect_press():
     """
-        This method handles the response/state of a broad set of controls once the
-        operator either connects or disconnects to an instrument resource.
+    This method handles the response/state of a broad set of controls once
+    the operator either connects or disconnects to an instrument resource.
     """
     if not is_connected.get():
         try:
@@ -183,7 +186,8 @@ def button_connect_disconnect_press():
                                            do_reset=0,
                                            do_clear=0, )
 
-            # A successful connection should change the state of the connect button
+            # A successful connection should change the state of the connect
+            # button
             btn_connect.config(text="Disconnect")
             is_connected.set(True)
 
@@ -244,10 +248,10 @@ def button_connect_disconnect_press():
 
 def button_instruments_refresh():
     """
-        This method handles the response to the click of the Refresh button,
-        clearing the combo box text, polling the resource manager for all
-        available instrument resources, then populating the combo options
-        accordingly.
+    This method handles the response to the click of the Refresh button,
+    clearing the combo box text, polling the resource manager for all
+    available instrument resources, then populating the combo options
+    accordingly.
     """
     # Clear the Combobox text and, knowing it'll be clear invoke the combo
     # action to disable controls
@@ -262,8 +266,8 @@ def button_instruments_refresh():
 
 def chk_a_action():
     """
-        This method handles the state of the check box associated with the
-        sockets implementaion for the LAN options.
+    This method handles the state of the check box associated with the
+    sockets implementaion for the LAN options.
     """
     if chk_a_val.get() == 1:
         dud = 1
@@ -290,7 +294,6 @@ def button_write_press():
 
     # add the command(s) to the end of the logging Text widget
     txt_command_logger.insert(END, single_command_string.get() + "\n")
-    return
 
 
 def button_query_press():
@@ -315,7 +318,6 @@ def button_query_press():
     cbo_single_commands['values'] = tuple(list(cbo_single_commands['values'])
                                           +
                                           [single_command_string.get()])
-    return
 
 
 def button_clear_list_press():
@@ -331,36 +333,52 @@ def button_clear_list_press():
 
 
 def button_send_commands_press():
-    # Read in all text from the Text control and split by line feed character into a list
+    """
+    This method handles the retreival of each command provided in the list
+    control and placing them into a list that
+    """
+    # Read in all text from the Text control and split by line feed character
+    # into a list then promotes the communications exchanges based on the
+    # selection provided via the associated radio buttons.
     temp_container = txt_multi_command_text.get(1.0, END).split('\n')
 
     enable_disable_multi_cmd_buttons(False)
 
-    # Issue the commands depending on the setting of the selected execution mode
+    # Issue the commands depending on the setting of the selected execution
+    # mode
     if var1.get() == 1:
         # Do normal command at a time send
         sequential_iterative_send_commands(temp_container)
     elif var1.get() == 2:
         # Do timed command sending
-        # Get the time from the Entry widget associated with the timed radio option
+        # Get the time from the Entry widget associated with the timed radio
+        # option
         delay_time = float(seconds.get())
-        sequential_iterative_send_commands(temp_container, do_timed=1, delay_s=delay_time)
+        sequential_iterative_send_commands(temp_container,
+                                           do_timed=1,
+                                           delay_s=delay_time)
     elif var1.get() == 3:
         # Do step-wise command sending
         step_wise_iterative_send_commands(temp_container)
 
     enable_disable_multi_cmd_buttons(True)
 
-    return
-
 
 def sequential_iterative_send_commands(command_list, do_timed=0, delay_s=1.0):
+    """
+    This method accepts a command list then loops over each index to issue
+    either a write or query command, and returning data for the latter case
+    """
     response = ""
-    is_query = False     # start with assuming the command is a write since this is the typical majority
+    # Start with assuming the command is a write since this is the typical
+    # majority
+    is_query = False
+
     for i, cmd in enumerate(command_list):
         # add the command(s) to the end of the logging Text widget
         txt_command_logger.insert(END, cmd + "\n")
-        # refresh at least the text widget so that commands are updated as they are issued
+        # refresh at least the text widget so that commands are updated as
+        # they are issued
         txt_command_logger.update_idletasks()
         if "?" in cmd:
             response = mycomms.instrument_query(cmd)
@@ -375,21 +393,25 @@ def sequential_iterative_send_commands(command_list, do_timed=0, delay_s=1.0):
             mycomms.instrument_write(cmd)
 
         if is_query:
-            # Add the output or return content to the end of the logging Text widget
+            # Add the output or return content to the end of the logging Text
+            # widget
             txt_command_logger.insert(END, response + "\n")
             is_query = False
-            # refresh at least the text widget so that responses are updated as they are received
+            # refresh at least the text widget so that responses are updated as
+            # they are received
             txt_command_logger.update_idletasks()
 
         # if set to include a delay time, implement a sleep time in seconds
         if do_timed == 1:
             time.sleep(delay_s)
-    return
 
 
-def button_step_press(*args):
-    # First click on the button should set a flag to note we're in step mode so the Load Commands button
-    # can be altered accordingly.
+def button_step_press():
+    """
+    This method handles the stepping through the commands in the list.
+    """
+    # First click on the button should set a flag to note we're in step mode
+    # so the Load Commands button can be altered accordingly.
     if in_step_mode.get() == 0:
         # set the flag
         in_step_mode.set(1)
@@ -398,41 +420,51 @@ def button_step_press(*args):
         btn_clear_commands.config(state='disabled')
         btn_save_commands.config(state='disabled')
 
-        # Change the text on the Load Commands button because I'm lazy and don't want to add another button
-        # to the UI. Also, during the stepping (or other) process this button shouldn't be used anyway.
+        # Change the text on the Load Commands button because I'm lazy and
+        # don't want to add another button to the UI. Also, during the
+        # stepping (or other) process this button shouldn't be used anyway.
         btn_load_commands.config(text="Stop\nStepping")
 
-        # Fetch commands out of the multi-line text area and initially put into a list for evaluation
+        # Fetch commands out of the multi-line text area and initially put
+        # into a list for evaluation
         temp_container = txt_multi_command_text.get(1.0, END).split('\n')
 
-        # Determine start stop points of each command line which (ideally) should be separated by
-        # the line feed character
+        # Determine start stop points of each command line which (ideally)
+        # should be separated by the line feed character
         for i, cmd in enumerate(temp_container):
             print(cmd)
 
-
     else:
-
-        # if commands have not already been fetched from the Text widget, get them
+        # if commands have not already been fetched from the Text widget,
+        # get them
         print("step")
         # how do we stop the stepping activity? - I have an idea
-        # what do we do with the other buttons? is it okay to change the Load Commands button
-        # text to "Stop Stepping"? - yes
-        # Perhaps set a flag (or flags) to help control this.... yeah, yeah, yeah
+        # what do we do with the other buttons? is it okay to change the
+        # Load Commands buttontext to "Stop Stepping"? - yes
+        # Perhaps set a flag (or flags) to help control this.... yeah, yeah,
+        # yeah
 
         # Will also want/need to track or break apart commands
-        # Is there a way to highlight commands in the Text widget as the user steps over them? See the link
+        # Is there a way to highlight commands in the Text widget as the user
+        # steps over them? See the link:
         # https://stackoverflow.com/questions/3781670/how-to-highlight-text-in-a-tkinter-text-widget#3781773 as well as
         # chapter 14 in Modern Tkinter for Busy Python Developers.
-    return
+
 
 def step_wise_iterative_send_commands(command_list):
-    return
+    """
+    This method handles stepping.
+    """
+    print(command_list)
 
 
 def enable_disable_multi_cmd_buttons(is_enabled):
-    # as of 2021-05-30 - this is a "good intentions" section of code that, while it seems to be coded properly
-    # it does not do what it is supposed to (disable and enable the target buttons)
+    """
+    This method handles enable/disable of controls
+    """
+    # as of 2021-05-30 - this is a "good intentions" section of code that,
+    # while it seems to be coded properlyit does not do what it is supposed
+    # to (disable and enable the target buttons)
     state_string = 'enabled'
     if not is_enabled:
         btn_send_commands.config(state='disabled')
@@ -447,55 +479,82 @@ def enable_disable_multi_cmd_buttons(is_enabled):
     return
 
 
-def button_clear_all_commands_press(*args):
+def button_clear_all_commands_press():
+    """
+    This method handles removing commands from the list control.
+    """
     txt_multi_command_text.delete(1.0, END)
-    return
 
 
-def button_save_commands_press(*args):
+def button_save_commands_press():
+    """
+    This method provides a means for an operator to save the series
+    of commands entered in the list control to file.
+    """
     try:
-        myFile = filedialog.asksaveasfile(mode='w',
-                                          defaultextension='.txt',
-                                          title="Save Commands",
-                                          filetypes=[('TXT', '.txt'), ('TSP', '.tsp'), ('All Files', '*')])  # ('TSP', '.tsp'), ('Lua', '.lua'),
+        my_file = filedialog.asksaveasfile(mode='w',
+                                           defaultextension='.txt',
+                                           title="Save Commands",
+                                           filetypes=[('TXT', '.txt'),
+                                                      ('TSP', '.tsp'),
+                                                      ('LUA', '*.lua'),
+                                                      ('All Files', '*')])
+        # ('TSP', '.tsp'),  ('Lua', '.lua'),
 
-        if myFile is None:
+        if my_file is None:
             return
         data = txt_multi_command_text.get(1.0, END)
-        myFile.write(data)
-        myFile.close()
-    except Exception:
-            messagebox._show(title="Error Saving File", message="Unable to save file", _icon='error', _type='okcancel', encoding='udf8')
+        my_file.write(data)
+        my_file.close()
+    except FileExistsError:
+        messagebox._show(title="Error Saving File",
+                         message="Unable to save file",
+                         _icon='error',
+                         _type='okcancel',
+                         encoding='udf8')
     return
 
 
-def button_load_commands_press(*args):
+def button_load_commands_press():
+    """
+    This method is used by the operator to recall a file from disk and populate
+    its contents into the list box control.
+    """
     if in_step_mode.get() == 0:
         try:
             # have the user navigate to and select their file....
-            myFile = filedialog.askopenfile(defaultextension='.txt',
-                                            title="Save Commands",
-                                            filetypes=[('TXT', '.txt'), ('TSP', '.tsp'), ('All Files', '*')])
-            if myFile is None:
+            my_file = filedialog.askopenfile(defaultextension='.txt',
+                                             title="Save Commands",
+                                             filetypes=[('TXT', '.txt'),
+                                                        ('TSP', '.tsp'),
+                                                        ('LUA', '.lua'),
+                                                        ('All Files', '*')])
+            if my_file is None:
                 return
 
             # read the contents of the file into a temporary variable
-            with open(myFile.name) as f:
+            with open(my_file.name, encoding='utf-8') as f:
                 contents = f.read()
                 f.close()
 
             # populate our TextBox control with the file contents
             txt_multi_command_text.insert(1.0, contents)
 
-        except Exception:
-            # tkMessageBox.showerror('Error Saving Grammar', 'Unable to open file: %r' % filename)
-            messagebox._show(title="Error Loading File", message="Unable to load file", _icon='error', _type='okcancel')
+        except FileNotFoundError:
+            # tkMessageBox.showerror('Error Saving Grammar', 'Unable to open
+            # file: %r' % filename)
+            messagebox._show(title="Error Loading File",
+                             message="Unable to load file",
+                             _icon='error',
+                             _type='okcancel')
     else:
         print("I'm a sexy stepper")
-        # Getting here means that the button text reads "Stop Stepping", so we need to revert to "Load Commands"
+        # Getting here means that the button text reads "Stop Stepping", so we
+        # need to revert to "Load Commands"
         btn_load_commands.config(text="Load\nCommands")
 
-        # And we want the environment to know we're no longer doing step-mode stuff....
+        # And we want the environment to know we're no longer doing step-mode
+        # stuff....
         in_step_mode.set(0)
         # enable mult-line command buttons
         # disable other mulit-line command buttons....
@@ -503,31 +562,41 @@ def button_load_commands_press(*args):
         btn_clear_commands.config(state='normal')
         btn_save_commands.config(state='normal')
 
-        # clean up for any other flags....
-    return
+        # clean up for any other flags...
 
 
-def clear_logging_commands_from_text_widget(*args):
+def clear_logging_commands_from_text_widget():
+    """
+    Method to clear logging commands from the text widget.
+    """
     txt_command_logger.delete(1.0, END)
-    return
 
 
-def save_logging_commands_from_text_widget(*args):
+def save_logging_commands_from_text_widget():
+    """
+    Method to save logging commands.
+    """
     try:
-        myFile = filedialog.asksaveasfile(mode='w',
-                                          defaultextension='.txt',
-                                          title="Save Commands",
-                                          filetypes=[('TXT', '.txt'), ('All Files', '*')])  # ('TSP', '.tsp'), ('Lua', '.lua'),
+        my_file = filedialog.asksaveasfile(mode='w',
+                                           defaultextension='.txt',
+                                           title="Save Commands",
+                                           filetypes=[('TXT', '.txt'),
+                                                      ('All Files', '*')])
+        # ('TSP', '.tsp'), ('Lua', '.lua'),
 
-        if myFile is None:
+        if my_file is None:
             return
         data = txt_command_logger.get(1.0, END)
-        myFile.write(data)
-        myFile.close()
-    except Exception:
-        #tkMessageBox.showerror('Error Saving Grammar', 'Unable to open file: %r' % filename)
-        messagebox._show(title="Error Saving File", message="Unable to save file", _icon='error', _type='okcancel', encoding='udf8')
-    return
+        my_file.write(data)
+        my_file.close()
+    except FileExistsError:
+        # tkMessageBox.showerror('Error Saving Grammar', 
+        # 'Unable to open file: %r' % filename)
+        messagebox._show(title="Error Saving File",
+                         message="Unable to save file",
+                         _icon='error',
+                         _type='okcancel',
+                         encoding='utf8')
 
 
 # ==========================================================================================
@@ -538,9 +607,9 @@ root = Tk()
 root.title("Keithley Remote Programming Learning Tool 2.0")
 root.columnconfigure(0, weight=1)   # helps with frame/app resizing on the fly
 root.rowconfigure(0, weight=1)      # helps with frame/app resizing on the fly
-# We define a geometry instead of independent height and width because the tkinter
-# base behavior of widgets appears to override the intended behavior, meaning our
-# sizes appear to get ignored after the widgets are gridded up.
+# We define a geometry instead of independent height and width because the
+# tkinter base behavior of widgets appears to override the intended behavior,
+# meaning our sizes appear to get ignored after the widgets are gridded up.
 root.geometry("778x555")
 
 
@@ -569,55 +638,85 @@ cbo_term_char_variable = StringVar()
 
 in_step_mode = IntVar()
 
-# Created a main frame (within the root GUI) on which to place controls. This allows for adding padding
-# to be added as needed around the perimeter of the UI and provide a more appealing appearance.
+# Created a main frame (within the root GUI) on which to place controls. This
+# allows for adding padding to be added as needed around the perimeter of the
+# UI and provide a more appealing appearance.
 main_frame = ttk.Frame(root, padding="5 5 5 5", height=300, width=600)
-main_frame.grid(column=0, row=0, sticky=(N, W, E, S))    # anchors to the root at the default position
+# anchors to the root at the default position
+main_frame.grid(column=0, row=0, sticky=(N, W, E, S))
 main_frame.columnconfigure(0, weight=1)
 
 
-# Create a group box (aka Labelframe) to hold the instrument detect, select, connect/disconnect controls
-grp_instruments = ttk.Labelframe(main_frame, text='Instrument Select', pad=(5, 5, 5, 5), height=300, width=150)
+# Create a group box (aka Labelframe) to hold the instrument detect, select,
+# connect/disconnect controls
+grp_instruments = ttk.Labelframe(main_frame,
+                                 text='Instrument Select',
+                                 pad=(5, 5, 5, 5),
+                                 height=300,
+                                 width=150)
 
-cbo_instruments = ttk.Combobox(grp_instruments, textvariable=cbo_instr_variable, width=48)
+cbo_instruments = ttk.Combobox(grp_instruments,
+                               textvariable=cbo_instr_variable,
+                               width=48)
 cbo_instruments.bind('<<ComboboxSelected>>', cbo_changed_instruments)
 cbo_instruments['values'] = resources_tuple
-cbo_instruments.current()   # leave blank so that we can force the operator to select from available options
+# leave blank so that we can force the operator to select from available
+# options
+cbo_instruments.current()
 
-btn_connect = ttk.Button(grp_instruments, text="Connect", command=button_connect_disconnect_press, width=23)
-btn_refresh = ttk.Button(grp_instruments, text="Refresh", command=button_instruments_refresh)
+btn_connect = ttk.Button(grp_instruments,
+                         text="Connect",
+                         command=button_connect_disconnect_press,
+                         width=23)
+btn_refresh = ttk.Button(grp_instruments,
+                         text="Refresh",
+                         command=button_instruments_refresh)
 
 grp_sockets_utils = ttk.Labelframe(grp_instruments, text="Sockets")
 # lbl_enable_term = ttk.Label(grp_sockets_utils, text="Enable Term")
-chk_enable_term = ttk.Checkbutton(grp_sockets_utils, text="Enable Term Char", command=chk_a_action, variable=chk_a_val)
+chk_enable_term = ttk.Checkbutton(grp_sockets_utils,
+                                  text="Enable Term Char",
+                                  command=chk_a_action,
+                                  variable=chk_a_val)
 
 grp_serial_utils = ttk.Labelframe(grp_instruments, text="RS-232")
 lbl_baud = ttk.Label(grp_serial_utils, text="Baud", width=10)
-cbo_baud = ttk.Combobox(grp_serial_utils, textvariable=cbo_baud_rate_variable, width=10)
+cbo_baud = ttk.Combobox(grp_serial_utils,
+                        textvariable=cbo_baud_rate_variable,
+                        width=10)
 cbo_baud['values'] = ['9600', '115200']
 cbo_baud.current(0)
 
 lbl_parity = ttk.Label(grp_serial_utils, text="Parity", width=10)
-cbo_parity = ttk.Combobox(grp_serial_utils, textvariable=cbo_parity_variable, width=10)
+cbo_parity = ttk.Combobox(grp_serial_utils,
+                          textvariable=cbo_parity_variable,
+                          width=10)
 cbo_parity['values'] = ['None', 'Odd', 'Even']
 cbo_parity.current(0)
 
 lbl_stop_bits = ttk.Label(grp_serial_utils, text="Stop Bits", width=10)
-cbo_stop_bits = ttk.Combobox(grp_serial_utils, textvariable=cbo_stop_bits_variable, width=10)
+cbo_stop_bits = ttk.Combobox(grp_serial_utils,
+                             textvariable=cbo_stop_bits_variable,
+                             width=10)
 cbo_stop_bits['values'] = ['0', '1', '2']
 cbo_stop_bits.current(1)
 
 lbl_flow_ctrl = ttk.Label(grp_serial_utils, text="Flow Ctrl", width=10)
-cbo_flow_ctrl = ttk.Combobox(grp_serial_utils, textvariable=cbo_flow_ctrl_variable, width=10)
+cbo_flow_ctrl = ttk.Combobox(grp_serial_utils,
+                             textvariable=cbo_flow_ctrl_variable,
+                             width=10)
 cbo_flow_ctrl['values'] = ['None', 'XON/XOFF', 'RTS/CTS']
 cbo_flow_ctrl.current(0)
 
 lbl_term_char = ttk.Label(grp_serial_utils, text="Term Char", width=10)
-cbo_term_char = ttk.Combobox(grp_serial_utils, textvariable=cbo_term_char_variable, width=10)
+cbo_term_char = ttk.Combobox(grp_serial_utils,
+                             textvariable=cbo_term_char_variable,
+                             width=10)
 cbo_term_char['values'] = ['\\n', '\\r']
 cbo_term_char.current(0)
 
-# Create a group box (aka Labelframe) to hold the single command operation tools....
+# Create a group box (aka Labelframe) to hold the single command operation
+# tools....
 grp_single_command_ops = ttk.Labelframe(main_frame,
                                         text="Single Command Operations",
                                         pad=(5, 5, 5, 5),
@@ -629,26 +728,46 @@ cbo_single_commands = ttk.Combobox(grp_single_command_ops,
 
 cbo_single_commands.bind('<<ComboboxSelected>>', cbo_single_command_changed)
 cbo_single_commands['values'] = ['*IDN?', '*RST', '*TRG']
-btn_cmd_write = ttk.Button(grp_single_command_ops, text="Write", command=button_write_press)
-btn_cmd_query = ttk.Button(grp_single_command_ops, text="Query", command=button_query_press)
-btn_clear_command_list = ttk.Button(grp_single_command_ops, text="Clear List", command=button_clear_list_press)
+btn_cmd_write = ttk.Button(grp_single_command_ops,
+                           text="Write",
+                           command=button_write_press)
+btn_cmd_query = ttk.Button(grp_single_command_ops,
+                           text="Query",
+                           command=button_query_press)
+btn_clear_command_list = ttk.Button(grp_single_command_ops,
+                                    text="Clear List",
+                                    command=button_clear_list_press)
 
 
-# Create a group box (aka Labelframe) to hold the multi command operation tools....
+# Create a group box (aka Labelframe) to hold the multi command operation
+# tools....
 grp_multi_command_ops = ttk.Labelframe(main_frame,
                                        text="Multi-command Operations",
                                        pad=(5, 5, 5, 5),
                                        height=350,
                                        width=350)
 txt_multi_command_text = Text(grp_multi_command_ops, height=15, width=40)
-s = ttk.Scrollbar(grp_multi_command_ops, orient=VERTICAL, command=txt_multi_command_text.yview)
+s = ttk.Scrollbar(grp_multi_command_ops,
+                  orient=VERTICAL,
+                  command=txt_multi_command_text.yview)
 
-txt_multi_command_text['yscrollcommand'] = s.set         # reference the scrollbar action to the list box scroll command
-btn_send_commands = ttk.Button(grp_multi_command_ops, text="Send\nCommands", command=button_send_commands_press)
-btn_clear_commands = ttk.Button(grp_multi_command_ops, text="Clear All\nCommands", command=button_clear_all_commands_press)
-btn_save_commands = ttk.Button(grp_multi_command_ops, text="Save\nCommands", command=button_save_commands_press)
-btn_load_commands = ttk.Button(grp_multi_command_ops, text="Load\nCommands", command=button_load_commands_press)
-grp_execution_mode = ttk.Labelframe(grp_multi_command_ops, text="Multi-command Execution Mode", pad=(5, 5, 5, 5))
+# reference the scrollbar action to the list box scroll command
+txt_multi_command_text['yscrollcommand'] = s.set
+btn_send_commands = ttk.Button(grp_multi_command_ops,
+                               text="Send\nCommands",
+                               command=button_send_commands_press)
+btn_clear_commands = ttk.Button(grp_multi_command_ops,
+                                text="Clear All\nCommands",
+                                command=button_clear_all_commands_press)
+btn_save_commands = ttk.Button(grp_multi_command_ops,
+                               text="Save\nCommands",
+                               command=button_save_commands_press)
+btn_load_commands = ttk.Button(grp_multi_command_ops,
+                               text="Load\nCommands",
+                               command=button_load_commands_press)
+grp_execution_mode = ttk.Labelframe(grp_multi_command_ops,
+                                    text="Multi-command Execution Mode",
+                                    pad=(5, 5, 5, 5))
 btn_temp = ttk.Button(grp_execution_mode, text="temp")
 rdo_option_1 = ttk.Radiobutton(grp_execution_mode,
                                text="Normal",
@@ -668,23 +787,42 @@ rdo_option_3 = ttk.Radiobutton(grp_execution_mode,
                                variable=var1,
                                value=3,
                                command=frame_a_rdo_click)
-lbl_rdo1_buffer = ttk.Label(grp_execution_mode, text="", state='disabled', width=24)
-txt_timed_s = ttk.Entry(grp_execution_mode, textvariable=seconds, state='disabled', width=8)
-lbl_timed_s = ttk.Label(grp_execution_mode, text=" s", state='disabled', width=16)
-btn_stepper = ttk.Button(grp_execution_mode, text="Step", state='disabled', command=button_step_press)
+lbl_rdo1_buffer = ttk.Label(grp_execution_mode, text="",
+                            state='disabled',
+                            width=24)
+txt_timed_s = ttk.Entry(grp_execution_mode,
+                        textvariable=seconds,
+                        state='disabled',
+                        width=8)
+lbl_timed_s = ttk.Label(grp_execution_mode,
+                        text=" s",
+                        state='disabled',
+                        width=16)
+btn_stepper = ttk.Button(grp_execution_mode,
+                         text="Step",
+                         state='disabled',
+                         command=button_step_press)
 
-# add a text control where commands and responses can be dumped as the user communicates with the instrument
+# add a text control where commands and responses can be dumped as the user
+# communicates with the instrument
 grp_command_logging_tools = ttk.Labelframe(main_frame,
                                            text="Command Logging",
                                            pad=(5, 5, 5, 5),
                                            height=15,
                                            width=250)
 txt_command_logger = Text(grp_command_logging_tools, height=10, width=75)
-s_cmd = ttk.Scrollbar(grp_command_logging_tools, orient=VERTICAL, command=txt_command_logger.yview)
+s_cmd = ttk.Scrollbar(grp_command_logging_tools,
+                      orient=VERTICAL,
+                      command=txt_command_logger.yview)
 
-txt_command_logger['yscrollcommand'] = s_cmd.set         # reference the scrollbar action to the list box scroll command
-btn_clear_logging_commands = ttk.Button(grp_command_logging_tools, text="Clear Log\nCommands", command=clear_logging_commands_from_text_widget)
-btn_save_logging_commands = ttk.Button(grp_command_logging_tools, text="Save Log\nCommands", command=save_logging_commands_from_text_widget)
+# reference the scrollbar action to the list box scroll command
+txt_command_logger['yscrollcommand'] = s_cmd.set
+btn_clear_logging_commands = ttk.Button(grp_command_logging_tools,
+                                        text="Clear Log\nCommands",
+                                        command=clear_logging_commands_from_text_widget)
+btn_save_logging_commands = ttk.Button(grp_command_logging_tools,
+                                       text="Save Log\nCommands",
+                                       command=save_logging_commands_from_text_widget)
 
 # grid up our controls on the main GUI....
 # instruments group controls
@@ -739,14 +877,18 @@ rdo_option_3.grid(column=3, row=0, sticky=(W, E))
 btn_stepper.grid(column=3, row=1)
 
 # group the command logging tools on the main GUI....
-grp_command_logging_tools.grid(column=0, row=2, columnspan=2, sticky=(N, S, W, E))
+grp_command_logging_tools.grid(column=0,
+                               row=2,
+                               columnspan=2,
+                               sticky=(N, S, W, E))
 txt_command_logger.grid(column=0, row=0, rowspan=2,)
 s_cmd.grid(column=1, row=0, sticky=(N, S), rowspan=2)
 btn_clear_logging_commands.grid(column=2, row=0, sticky=(N, E))
 btn_save_logging_commands.grid(column=2, row=1, sticky=(N, E))
 
-# While the expected initial connected state will truly be false, we set to True here
-# then invoke the connect/disconnect function so that it sets the state of the controls.
+# While the expected initial connected state will truly be false, we set to
+# True here then invoke the connect/disconnect function so that it sets the
+# state of the controls.
 is_connected.set(True)
 btn_connect.invoke()
 

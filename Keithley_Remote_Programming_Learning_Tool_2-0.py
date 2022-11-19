@@ -138,6 +138,8 @@ def button_connect_disconnect_press():
     This method handles the response/state of a broad set of controls once
     the operator either connects or disconnects to an instrument resource.
     """
+    instrsrc = instr_resource_string.get()
+    bdrt = cbo_baud_rate_variable.get()
     if not is_connected.get():
         try:
             # Attempt to connect to the VISA resource
@@ -154,33 +156,35 @@ def button_connect_disconnect_press():
                 elif "2" in cbo_stop_bits_variable.get():
                     _stop = pyconst.StopBits.two
                 else:
-                    _stop = pyconst.StopBits.none
+                    _stop = pyconst.StopBits.one_and_a_half
 
                 if "None" in cbo_flow_ctrl_variable.get():
                     _flow = pyconst.ControlFlow.none
                 elif "RTS" in cbo_flow_ctrl_variable.get():
-                    _flow = pyconst.ControlFlow.rts
+                    _flow = pyconst.ControlFlow.rts_cts
                 elif "XON" in cbo_flow_ctrl_variable.get():
-                    _flow = pyconst.ControlFlow.xon
+                    _flow = pyconst.ControlFlow.xon_xoff
+                elif "DTR" in cbo_flow_ctrl_variable.get():
+                    _flow = pyconst.ControlFlow.dtr_dsr
 
                 if "n" in cbo_term_char_variable.get():
                     _term = '\n'
                 else:
                     _term = '\r'
 
-                mycomms.instrument_connect(instrument_resource_string=instr_resource_string.get(),
+                mycomms.instrument_connect(instrument_resource_string=instrsrc,
                                            timeout=20000,
                                            do_id_query=1,
                                            do_reset=0,
                                            do_clear=0,
-                                           baud_rate=int(cbo_baud_rate_variable.get()),
+                                           baud_rate=int(bdrt),
                                            parity=_parity,
                                            stop_bits=_stop,
                                            flow_control=_flow,
                                            read_terminator=_term
                                            )
             else:
-                mycomms.instrument_connect(instrument_resource_string=instr_resource_string.get(),
+                mycomms.instrument_connect(instrument_resource_string=instrsrc,
                                            timeout=20000,
                                            do_id_query=1,
                                            do_reset=0,
@@ -270,9 +274,9 @@ def chk_a_action():
     sockets implementaion for the LAN options.
     """
     if chk_a_val.get() == 1:
-        dud = 1
+        print(1)        # dud = 1   # commenting out until future use found
     else:
-        dud = 2
+        print(2)        # dud = 2
     return
 
 
@@ -322,7 +326,7 @@ def button_query_press():
 
 def button_clear_list_press():
     """
-    This method handles the clearing of the single command 
+    This method handles the clearing of the single command
     """
     # remove all the contents of the combo box
     cbo_single_commands.delete(0, END)
@@ -447,7 +451,8 @@ def button_step_press():
         # Will also want/need to track or break apart commands
         # Is there a way to highlight commands in the Text widget as the user
         # steps over them? See the link:
-        # https://stackoverflow.com/questions/3781670/how-to-highlight-text-in-a-tkinter-text-widget#3781773 as well as
+        # https://stackoverflow.com/questions/3781670/how-to-highlight-text-in-a-\
+        # tkinter-text-widget#3781773 as well as
         # chapter 14 in Modern Tkinter for Busy Python Developers.
 
 
@@ -465,7 +470,7 @@ def enable_disable_multi_cmd_buttons(is_enabled):
     # as of 2021-05-30 - this is a "good intentions" section of code that,
     # while it seems to be coded properlyit does not do what it is supposed
     # to (disable and enable the target buttons)
-    state_string = 'enabled'
+    # state_string = 'enabled'  # CONSIDER DELETING IF NO FUTURE USE DETERMINED
     if not is_enabled:
         btn_send_commands.config(state='disabled')
         btn_clear_commands.config(state='disabled')
@@ -599,9 +604,9 @@ def save_logging_commands_from_text_widget():
                          encoding='utf8')
 
 
-# ==========================================================================================
+# =======================================================================
 # Place our main UI definition here
-# ==========================================================================================
+# =======================================================================
 
 root = Tk()
 root.title("Keithley Remote Programming Learning Tool 2.0")
@@ -705,7 +710,7 @@ lbl_flow_ctrl = ttk.Label(grp_serial_utils, text="Flow Ctrl", width=10)
 cbo_flow_ctrl = ttk.Combobox(grp_serial_utils,
                              textvariable=cbo_flow_ctrl_variable,
                              width=10)
-cbo_flow_ctrl['values'] = ['None', 'XON/XOFF', 'RTS/CTS']
+cbo_flow_ctrl['values'] = ['None', 'XON/XOFF', 'RTS/CTS', 'DTR/DSR']
 cbo_flow_ctrl.current(0)
 
 lbl_term_char = ttk.Label(grp_serial_utils, text="Term Char", width=10)
@@ -817,12 +822,13 @@ s_cmd = ttk.Scrollbar(grp_command_logging_tools,
 
 # reference the scrollbar action to the list box scroll command
 txt_command_logger['yscrollcommand'] = s_cmd.set
+clcftw_alt = clear_logging_commands_from_text_widget  # see use below
 btn_clear_logging_commands = ttk.Button(grp_command_logging_tools,
                                         text="Clear Log\nCommands",
-                                        command=clear_logging_commands_from_text_widget)
+                                        command=clcftw_alt)
 btn_save_logging_commands = ttk.Button(grp_command_logging_tools,
                                        text="Save Log\nCommands",
-                                       command=save_logging_commands_from_text_widget)
+                                       command=clcftw_alt)
 
 # grid up our controls on the main GUI....
 # instruments group controls
